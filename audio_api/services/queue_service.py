@@ -197,9 +197,7 @@ class QueueService:
 
                 if self.use_redis:
                     # Redis backend
-                    await asyncio.to_thread(
-                        self._redis_client.lpush, self.task_queue, json.dumps(task_data)
-                    )
+                    await self._redis_client.lpush(self.task_queue, json.dumps(task_data))
                 else:
                     # In-memory backend
                     self._task_queue.appendleft(task_data)
@@ -219,8 +217,7 @@ class QueueService:
 
             if self.use_redis:
                 # Redis backend
-                await asyncio.to_thread(
-                    self._redis_client.setex,
+                await self._redis_client.setex(
                     f"{self.batch_prefix}{batch_id}",
                     3600,  # 1 hour TTL
                     json.dumps(batch_data),
@@ -314,9 +311,7 @@ class QueueService:
             if self.use_redis:
                 # Redis backend
                 batch_key = f"{self.batch_prefix}{batch_id}"
-                batch_data_str = await asyncio.to_thread(
-                    self._redis_client.get, batch_key
-                )
+                batch_data_str = await self._redis_client.get(batch_key)
                 if not batch_data_str:
                     logger.warning(f"Batch {batch_id} not found")
                     return
@@ -343,9 +338,7 @@ class QueueService:
             if self.use_redis:
                 # Redis backend
                 batch_key = f"{self.batch_prefix}{batch_id}"
-                await asyncio.to_thread(
-                    self._redis_client.setex, batch_key, 3600, json.dumps(batch_data)
-                )
+                await self._redis_client.setex(batch_key, 3600, json.dumps(batch_data))
             else:
                 # In-memory backend (already updated in place)
                 pass
@@ -362,9 +355,7 @@ class QueueService:
         try:
             if self.use_redis:
                 # Redis backend
-                result_data_str = await asyncio.to_thread(
-                    self._redis_client.get, f"{self.result_prefix}{task_id}"
-                )
+                result_data_str = await self._redis_client.get(f"{self.result_prefix}{task_id}")
                 if not result_data_str:
                     return None
                 result_data = json.loads(result_data_str)
@@ -392,9 +383,7 @@ class QueueService:
         try:
             if self.use_redis:
                 # Redis backend
-                batch_data_str = await asyncio.to_thread(
-                    self._redis_client.get, f"{self.batch_prefix}{batch_id}"
-                )
+                batch_data_str = await self._redis_client.get(f"{self.batch_prefix}{batch_id}")
                 if not batch_data_str:
                     return None
                 batch_data = json.loads(batch_data_str)
