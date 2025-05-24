@@ -13,22 +13,37 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: Multimedia :: Sound/Audio :: Speech",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-requires-python = ">=3.12"
+requires-python = ">=3.9"
 dependencies = [
     "google-genai>=1.16.1",
     "python-dotenv>=1.1.0",
     "pydantic>=2.5.0",
     "aiofiles>=23.2.0",
     "redis>=6.1.0",
+    "tenacity>=9.1.2,<10.0.0",
+    "ruff>=0.11.8,<1.0.0",
+    "pytest>=8.3.5",
+    "pytest-asyncio>=0.26.0",
 ]
 
 [project.optional-dependencies]
 async = ["redis>=5.0.0"]
-dev = ["pytest>=7.0.0", "pytest-asyncio>=0.21.0", "flake8>=6.0.0"]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-mock>=3.10.0",
+    "pytest-cov>=4.0.0",
+    "flake8>=6.0.0",
+    "black>=23.0.0",
+    "mypy>=1.0.0"
+]
 
 [project.urls]
 Homepage = "https://github.com/your-username/audio-api"
@@ -42,3 +57,21 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["audio_api"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--strict-markers",
+]
+markers = [
+    "asyncio: marks tests as async (deselect with '-m \"not asyncio\"')",
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+]

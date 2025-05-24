@@ -10,13 +10,13 @@ from audio_api import AudioRequest, TTSService, VoiceName, Language
 
 async def test_voice_options():
     """Test a selection of voice options to demonstrate functionality."""
-    
+
     # Initialize TTS service
     tts = TTSService()
-    
+
     # Test text
     test_text = "Hello, this is a test of the voice generation system."
-    
+
     # Test a variety of voice characteristics
     test_voices = [
         (VoiceName.KORE, "Firm (default)"),
@@ -30,38 +30,34 @@ async def test_voice_options():
         (VoiceName.SULAFAT, "Warm"),
         (VoiceName.VINDEMIATRIX, "Gentle"),
     ]
-    
+
     print("🎵 Testing Voice Options")
     print("=" * 50)
-    
+
     for voice, description in test_voices:
         print(f"\n🎤 Testing {voice.value} ({description})")
-        
+
         # Create request with specific voice
         request = AudioRequest(
             text=test_text,
             language=Language.ENGLISH,
-            voice_config={
-                "voice_name": voice,
-                "speed": 1.0,
-                "pitch": 1.0
-            },
-            output_filename=f"voice_test_{voice.value.lower()}"
+            voice_config={"voice_name": voice, "speed": 1.0, "pitch": 1.0},
+            output_filename=f"voice_test_{voice.value.lower()}",
         )
-        
+
         # Generate audio
         result = await tts.generate_audio(request)
-        
+
         if result.success:
             print(f"   ✅ Generated: {result.file_path}")
             if result.duration:
                 print(f"   ⏱️  Duration: {result.duration:.2f}s")
         else:
             print(f"   ❌ Failed: {result.error}")
-    
+
     print(f"\n📋 All Available Voices ({len(VoiceName)} total):")
     print("=" * 50)
-    
+
     # Group voices by characteristic
     voice_groups = {
         "Bright": [VoiceName.ZEPHYR, VoiceName.AUTONOE],
@@ -87,7 +83,7 @@ async def test_voice_options():
         "Knowledgeable": [VoiceName.SADALTAGER],
         "Warm": [VoiceName.SULAFAT],
     }
-    
+
     for characteristic, voices in voice_groups.items():
         voice_names = ", ".join([v.value for v in voices])
         print(f"   {characteristic:15}: {voice_names}")
@@ -95,10 +91,10 @@ async def test_voice_options():
 
 async def demonstrate_voice_usage():
     """Demonstrate how to use different voices in code."""
-    
+
     print("\n💻 Code Usage Examples")
     print("=" * 50)
-    
+
     examples = [
         """
 # Basic usage with default voice (Kore - Firm)
@@ -124,7 +120,7 @@ request = AudioRequest(
         """
 # All available voice characteristics:
 # Bright: Zephyr, Autonoe
-# Upbeat: Puck, Laomedeia  
+# Upbeat: Puck, Laomedeia
 # Informative: Charon, Rasalgethi
 # Firm: Kore (default), Orus, Alnilam
 # Excitable: Fenrir
@@ -145,9 +141,9 @@ request = AudioRequest(
 # Lively: Sadachbia
 # Knowledgeable: Sadaltager
 # Warm: Sulafat
-        """
+        """,
     ]
-    
+
     for i, example in enumerate(examples, 1):
         print(f"\nExample {i}:")
         print(example.strip())
@@ -155,24 +151,26 @@ request = AudioRequest(
 
 async def main():
     """Main test function."""
-    
+
     # Check if API key is available
     if not os.getenv("GEMINI_API_KEY"):
         print("❌ GEMINI_API_KEY not found in environment variables")
         print("   Please set your API key in .env file or environment")
         return
-    
+
     print("🎵 Audio Generation Library - Voice Options Test")
     print("=" * 60)
-    
+
     try:
         await test_voice_options()
         await demonstrate_voice_usage()
-        
-        print(f"\n✅ Voice options test completed!")
-        print(f"   📁 Audio files saved in: output/")
-        print(f"   🎧 You can listen to the generated audio files to hear the differences")
-        
+
+        print("\n✅ Voice options test completed!")
+        print("   📁 Audio files saved in: output/")
+        print(
+            "   🎧 You can listen to the generated audio files to hear the differences"
+        )
+
     except Exception as e:
         print(f"❌ Test failed: {e}")
 
