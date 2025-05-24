@@ -94,3 +94,5 @@ celerybeat.pid
 # Package files
 *.tar.gz
 *.zip
+docs/GITHUB_ACTIONS_REFERENCE.md
+docs/RELEASE_PROCESS.md
