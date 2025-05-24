@@ -28,7 +28,7 @@ async def test_single_speaker():
         text="Hello! This is a test of single speaker TTS with style controls.",
         speaker_mode=SpeakerMode.SINGLE,
         voice_config={
-            "voice_name": VoiceName.SULAFAR,
+            "voice_name": VoiceName.SULAFAT,
             "speed": 1.2,  # Slightly faster
             "pitch": 1.1   # Slightly higher
         },
@@ -54,7 +54,7 @@ async def test_multi_speaker():
         speakers=[
             SpeakerConfig(
                 speaker_name="Alice",
-                voice_name=VoiceName.SULAFAR  # Warm voice
+                voice_name=VoiceName.SULAFAT  # Warm voice
             ),
             SpeakerConfig(
                 speaker_name="Bob", 
@@ -153,7 +153,7 @@ Employee: Our team's dedication and the new process improvements made a signific
             "name": "Casual Chat",
             "speakers": [
                 SpeakerConfig(speaker_name="Sam", voice_name=VoiceName.AOEDE),         # Breezy
-                SpeakerConfig(speaker_name="Jordan", voice_name=VoiceName.CALLIRHOE)   # Easy-going
+                SpeakerConfig(speaker_name="Jordan", voice_name=VoiceName.CALLIRRHOE)   # Easy-going
             ],
             "text": """TTS the following casual conversation:
 Sam: Hey Jordan! Want to grab some coffee later?
@@ -196,7 +196,7 @@ request = AudioRequest(
     text="Welcome to our service!",
     speaker_mode=SpeakerMode.SINGLE,
     voice_config={
-        "voice_name": VoiceName.SULAFAR,
+        "voice_name": VoiceName.SULAFAT,
         "speed": 1.1,  # Slightly faster
         "pitch": 1.0   # Normal pitch
     }
@@ -212,7 +212,7 @@ from audio_api import (
 multi_speaker_config = MultiSpeakerConfig(
     speakers=[
         SpeakerConfig(speaker_name="Host", voice_name=VoiceName.CHARON),
-        SpeakerConfig(speaker_name="Guest", voice_name=VoiceName.SULAFAR)
+        SpeakerConfig(speaker_name="Guest", voice_name=VoiceName.SULAFAT)
     ]
 )
 

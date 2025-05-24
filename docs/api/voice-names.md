@@ -10,8 +10,8 @@ The `VoiceName` enum provides type-safe access to all available voices with thei
 from audio_api import VoiceName
 
 # Access any voice
-voice = VoiceName.SULAFAR  # Warm voice
-print(voice.value)  # "Sulafar"
+voice = VoiceName.SULAFAT  # Warm voice
+print(voice.value)  # "sulafat"
 ```
 
 ## 📋 Complete Voice Catalog
@@ -131,7 +131,7 @@ Relaxed and casual, perfect for informal content.
 
 | Voice | Enum Value | Characteristic | Best For |
 |-------|------------|----------------|----------|
-| Callirhoe | `VoiceName.CALLIRHOE` | Easy-going | Casual messaging, friendly updates |
+| Callirrhoe | `VoiceName.CALLIRRHOE` | Easy-going | Casual messaging, friendly updates |
 | Umbriel | `VoiceName.UMBRIEL` | Easy-going | Informal announcements, relaxed content |
 
 ```python
@@ -344,7 +344,7 @@ Welcoming and friendly, ideal for personal connection.
 
 | Voice | Enum Value | Characteristic | Best For |
 |-------|------------|----------------|----------|
-| Sulafar | `VoiceName.SULAFAR` | Warm | Welcome messages, personal greetings, friendly content |
+| Sulafat | `VoiceName.SULAFAT` | Warm | Welcome messages, personal greetings, friendly content |
 
 ```python
 # Usage example
@@ -467,7 +467,7 @@ request = AudioRequest(
 | Voice | Bright | Warm | Professional | Casual | Energetic | Calm |
 |-------|--------|------|--------------|--------|-----------|------|
 | Zephyr | ✅ | | | | ✅ | |
-| Sulafar | | ✅ | | ✅ | | |
+| Sulafat | | ✅ | | ✅ | | |
 | Kore | | | ✅ | | | |
 | Charon | | | ✅ | | | |
 | Puck | ✅ | | | ✅ | ✅ | |

@@ -59,78 +59,78 @@ class Language(str, Enum):
 
 class VoiceName(str, Enum):
     # Bright Voices
-    ZEPHYR = "Zephyr"  # Bright
-    AUTONOE = "Autonoe"  # Bright
+    ZEPHYR = "zephyr"  # Bright
+    AUTONOE = "autonoe"  # Bright
     
     # Upbeat Voices
-    PUCK = "Puck"  # Upbeat
-    LAOMEDEIA = "Laomedeia"  # Upbeat
+    PUCK = "puck"  # Upbeat
+    LAOMEDEIA = "laomedeia"  # Upbeat
     
     # Informative Voices
-    CHARON = "Charon"  # Informative
-    RASALGETHI = "Rasalgethi"  # Informative
+    CHARON = "charon"  # Informative
+    RASALGETHI = "rasalgethi"  # Informative
     
     # Firm Voices
-    KORE = "Kore"  # Firm (default)
-    ORUS = "Orus"  # Firm
-    ALNILAM = "Alnilam"  # Firm
+    KORE = "kore"  # Firm (default)
+    ORUS = "orus"  # Firm
+    ALNILAM = "alnilam"  # Firm
     
     # Excitable Voices
-    FENRIR = "Fenrir"  # Excitable
+    FENRIR = "fenrir"  # Excitable
     
     # Youthful Voices
-    LEDA = "Leda"  # Youthful
+    LEDA = "leda"  # Youthful
     
     # Breezy Voices
-    AOEDE = "Aoede"  # Breezy
+    AOEDE = "aoede"  # Breezy
     
     # Easy-going Voices
-    CALLIRHOE = "Callirhoe"  # Easy-going
-    UMBRIEL = "Umbriel"  # Easy-going
+    CALLIRRHOE = "callirrhoe"  # Easy-going (fixed spelling: double 'r')
+    UMBRIEL = "umbriel"  # Easy-going
     
     # Breathy Voices
-    ENCELADUS = "Enceladus"  # Breathy
+    ENCELADUS = "enceladus"  # Breathy
     
     # Clear Voices
-    IAPETUS = "Iapetus"  # Clear
-    ERINOME = "Erinome"  # Clear
+    IAPETUS = "iapetus"  # Clear
+    ERINOME = "erinome"  # Clear
     
     # Smooth Voices
-    ALGIEBA = "Algieba"  # Smooth
-    DESPINA = "Despina"  # Smooth
+    ALGIEBA = "algieba"  # Smooth
+    DESPINA = "despina"  # Smooth
     
     # Gravelly Voices
-    ALGENIB = "Algenib"  # Gravelly
+    ALGENIB = "algenib"  # Gravelly
     
     # Soft Voices
-    ACHERNAR = "Achernar"  # Soft
+    ACHERNAR = "achernar"  # Soft
     
     # Even Voices
-    SCHEDAR = "Schedar"  # Even
+    SCHEDAR = "schedar"  # Even
     
     # Mature Voices
-    GACRUX = "Gacrux"  # Mature
+    GACRUX = "gacrux"  # Mature
     
     # Friendly Voices
-    ACHIRD = "Achird"  # Friendly
+    ACHIRD = "achird"  # Friendly
     
     # Casual Voices
-    ZUBENELGENUBI = "Zubenelgenubi"  # Casual
+    ZUBENELGENUBI = "zubenelgenubi"  # Casual
     
     # Forward Voices
-    PULCHERRIMA = "Pulcherrima"  # Forward
+    PULCHERRIMA = "pulcherrima"  # Forward
     
     # Gentle Voices
-    VINDEMIATRIX = "Vindemiatrix"  # Gentle
+    VINDEMIATRIX = "vindemiatrix"  # Gentle
     
     # Lively Voices
-    SADACHBIA = "Sadachbia"  # Lively
+    SADACHBIA = "sadachbia"  # Lively
     
     # Knowledgeable Voices
-    SADALTAGER = "Sadaltager"  # Knowledgeable
+    SADALTAGER = "sadaltager"  # Knowledgeable
     
     # Warm Voices
-    SULAFAR = "Sulafar"  # Warm
+    SULAFAT = "sulafat"  # Warm (fixed spelling: ends with 't')
 
 
 class AudioFormat(BaseModel):

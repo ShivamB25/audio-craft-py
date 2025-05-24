@@ -27,7 +27,7 @@ async def test_voice_options():
         (VoiceName.FENRIR, "Excitable"),
         (VoiceName.ACHERNAR, "Soft"),
         (VoiceName.GACRUX, "Mature"),
-        (VoiceName.SULAFAR, "Warm"),
+        (VoiceName.SULAFAT, "Warm"),
         (VoiceName.VINDEMIATRIX, "Gentle"),
     ]
     
@@ -71,7 +71,7 @@ async def test_voice_options():
         "Excitable": [VoiceName.FENRIR],
         "Youthful": [VoiceName.LEDA],
         "Breezy": [VoiceName.AOEDE],
-        "Easy-going": [VoiceName.CALLIRHOE, VoiceName.UMBRIEL],
+        "Easy-going": [VoiceName.CALLIRRHOE, VoiceName.UMBRIEL],
         "Breathy": [VoiceName.ENCELADUS],
         "Clear": [VoiceName.IAPETUS, VoiceName.ERINOME],
         "Smooth": [VoiceName.ALGIEBA, VoiceName.DESPINA],
@@ -85,7 +85,7 @@ async def test_voice_options():
         "Gentle": [VoiceName.VINDEMIATRIX],
         "Lively": [VoiceName.SADACHBIA],
         "Knowledgeable": [VoiceName.SADALTAGER],
-        "Warm": [VoiceName.SULAFAR],
+        "Warm": [VoiceName.SULAFAT],
     }
     
     for characteristic, voices in voice_groups.items():
@@ -115,7 +115,7 @@ from audio_api import AudioRequest, TTSService, VoiceName
 request = AudioRequest(
     text="This is a warm, friendly voice",
     voice_config={
-        "voice_name": VoiceName.SULAFAR,  # Warm voice
+        "voice_name": VoiceName.SULAFAT,  # Warm voice
         "speed": 1.2,
         "pitch": 1.1
     }
@@ -130,7 +130,7 @@ request = AudioRequest(
 # Excitable: Fenrir
 # Youthful: Leda
 # Breezy: Aoede
-# Easy-going: Callirhoe, Umbriel
+# Easy-going: Callirrhoe, Umbriel
 # Breathy: Enceladus
 # Clear: Iapetus, Erinome
 # Smooth: Algieba, Despina
@@ -144,7 +144,7 @@ request = AudioRequest(
 # Gentle: Vindemiatrix
 # Lively: Sadachbia
 # Knowledgeable: Sadaltager
-# Warm: Sulafar
+# Warm: Sulafat
         """
     ]
     

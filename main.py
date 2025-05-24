@@ -86,13 +86,13 @@ async def custom_voice_example():
     print("\n🎭 Custom Voice Example")
     print("=" * 40)
 
-    from audio_api import VoiceConfig, AudioFormat
+    from audio_api import VoiceConfig, AudioFormat, VoiceName
 
     tts = TTSService()
 
     # Custom voice configuration
     voice_config = VoiceConfig(
-        voice_name="Aoede",  # Different voice
+        voice_name=VoiceName.AOEDE,  # Different voice
         speed=1.2,  # Slightly faster
         pitch=1.1,  # Slightly higher pitch
     )
