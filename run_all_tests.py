@@ -81,10 +81,10 @@ class TestRunner:
         
         # Check if test files exist
         test_files = [
-            "test_example.py",
-            "test_languages.py", 
-            "test_voice_options.py",
-            "test_multi_speaker.py",
+            "tests/test_example.py",
+            "tests/test_languages.py",
+            "tests/test_voice_options.py",
+            "tests/test_multi_speaker.py",
             "main.py"
         ]
         
@@ -121,10 +121,10 @@ class TestRunner:
         
         # Define all tests to run
         tests = [
-            ("python test_example.py", "Basic Functionality Test"),
-            ("python test_languages.py", "Multi-Language Support Test (24 languages)"),
-            ("python test_voice_options.py", "Voice Options Test (30 voices)"),
-            ("python test_multi_speaker.py", "Multi-Speaker TTS Test"),
+            ("python tests/test_example.py", "Basic Functionality Test"),
+            ("python tests/test_languages.py", "Multi-Language Support Test (24 languages)"),
+            ("python tests/test_voice_options.py", "Voice Options Test (30 voices)"),
+            ("python tests/test_multi_speaker.py", "Multi-Speaker TTS Test"),
             ("python main.py", "Comprehensive Examples"),
         ]
         
