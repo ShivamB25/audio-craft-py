@@ -49,7 +49,7 @@ def demonstrate_model_override():
     pro_request = AudioRequest(
         text="This explicitly uses the Pro model for quality",
         model=VoiceModel.GEMINI_TTS_PRO,
-        voice_config={"voice_name": VoiceName.SULAFAR},
+        voice_config={"voice_name": VoiceName.SULAFAT},
     )
     print(f"   Model used: {pro_request.model}")
     print(f"   Text: {pro_request.text}")
@@ -65,7 +65,7 @@ def demonstrate_model_override():
             voice = VoiceName.CHARON  # Clear and efficient
         elif use_case == "production":
             model = VoiceModel.GEMINI_TTS_PRO
-            voice = VoiceName.SULAFAR  # Warm and professional
+            voice = VoiceName.SULAFAT  # Warm and professional
         else:
             # Use environment default
             model = None  # Will use default from environment
