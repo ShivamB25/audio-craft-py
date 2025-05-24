@@ -1,20 +1,23 @@
+import json
+import uuid
+import asyncio
+from typing import Optional, Dict, Any, TYPE_CHECKING
+from datetime import datetime
+import logging
+from collections import deque
+
 try:
     import redis
     import redis.asyncio as aioredis
-
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False
     redis = None
     aioredis = None
 
-import json
-import uuid
-import asyncio
-from typing import Optional, Dict, Any
-from datetime import datetime
-import logging
-from collections import deque
+# Type checking imports
+if TYPE_CHECKING:
+    import redis.asyncio as aioredis_types
 from audio_api.models import (
     AudioRequest,
     BatchAudioRequest,
@@ -43,8 +46,8 @@ class QueueService:
         """
         self.config = config or get_config()
         self.use_redis = use_redis
-        self._redis_pool: Optional[aioredis.ConnectionPool] = None
-        self._redis_client: Optional[aioredis.Redis] = None
+        self._redis_pool: Optional["aioredis_types.ConnectionPool"] = None
+        self._redis_client: Optional["aioredis_types.Redis"] = None
         self._is_closed = False
 
         if use_redis:
@@ -194,7 +197,7 @@ class QueueService:
                 if self.use_redis:
                     # Redis backend
                     await asyncio.to_thread(
-                        self.redis_client.lpush, self.task_queue, json.dumps(task_data)
+                        self._redis_client.lpush, self.task_queue, json.dumps(task_data)
                     )
                 else:
                     # In-memory backend
@@ -216,7 +219,7 @@ class QueueService:
             if self.use_redis:
                 # Redis backend
                 await asyncio.to_thread(
-                    self.redis_client.setex,
+                    self._redis_client.setex,
                     f"{self.batch_prefix}{batch_id}",
                     3600,  # 1 hour TTL
                     json.dumps(batch_data),
@@ -311,7 +314,7 @@ class QueueService:
                 # Redis backend
                 batch_key = f"{self.batch_prefix}{batch_id}"
                 batch_data_str = await asyncio.to_thread(
-                    self.redis_client.get, batch_key
+                    self._redis_client.get, batch_key
                 )
                 if not batch_data_str:
                     logger.warning(f"Batch {batch_id} not found")
@@ -340,7 +343,7 @@ class QueueService:
                 # Redis backend
                 batch_key = f"{self.batch_prefix}{batch_id}"
                 await asyncio.to_thread(
-                    self.redis_client.setex, batch_key, 3600, json.dumps(batch_data)
+                    self._redis_client.setex, batch_key, 3600, json.dumps(batch_data)
                 )
             else:
                 # In-memory backend (already updated in place)
@@ -359,7 +362,7 @@ class QueueService:
             if self.use_redis:
                 # Redis backend
                 result_data_str = await asyncio.to_thread(
-                    self.redis_client.get, f"{self.result_prefix}{task_id}"
+                    self._redis_client.get, f"{self.result_prefix}{task_id}"
                 )
                 if not result_data_str:
                     return None
@@ -389,7 +392,7 @@ class QueueService:
             if self.use_redis:
                 # Redis backend
                 batch_data_str = await asyncio.to_thread(
-                    self.redis_client.get, f"{self.batch_prefix}{batch_id}"
+                    self._redis_client.get, f"{self.batch_prefix}{batch_id}"
                 )
                 if not batch_data_str:
                     return None
