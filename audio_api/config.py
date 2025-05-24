@@ -122,17 +122,67 @@ class AudioConfig(BaseModel):
 
     def validate_config(self) -> None:
         """Validate configuration values."""
+        # API Configuration validation
         if not self.gemini_api_key:
             raise ValueError("GEMINI_API_KEY is required")
 
+        # Audio Configuration validation
+        if self.default_sample_rate <= 0:
+            raise ValueError("DEFAULT_SAMPLE_RATE must be positive")
+        
+        if self.default_bit_depth not in [8, 16, 24, 32]:
+            raise ValueError("DEFAULT_BIT_DEPTH must be 8, 16, 24, or 32")
+        
+        if self.default_channels <= 0 or self.default_channels > 8:
+            raise ValueError("DEFAULT_CHANNELS must be between 1 and 8")
+
+        # Performance Configuration validation
         if self.max_context_tokens <= 0:
             raise ValueError("MAX_CONTEXT_TOKENS must be positive")
 
         if self.retry_attempts < 0:
             raise ValueError("RETRY_ATTEMPTS must be non-negative")
+        
+        if self.retry_min_wait < 0:
+            raise ValueError("RETRY_MIN_WAIT must be non-negative")
+        
+        if self.retry_max_wait < 0:
+            raise ValueError("RETRY_MAX_WAIT must be non-negative")
+        
+        if self.retry_min_wait > self.retry_max_wait:
+            raise ValueError("RETRY_MIN_WAIT must be less than or equal to RETRY_MAX_WAIT")
 
-        if self.default_sample_rate <= 0:
-            raise ValueError("DEFAULT_SAMPLE_RATE must be positive")
+        # Redis Configuration validation
+        if not self.redis_url:
+            raise ValueError("REDIS_URL is required")
+        
+        if not self.redis_url.startswith(("redis://", "rediss://")):
+            raise ValueError("REDIS_URL must start with 'redis://' or 'rediss://'")
+        
+        if self.redis_pool_size <= 0:
+            raise ValueError("REDIS_POOL_SIZE must be positive")
+
+        # Worker Configuration validation
+        if self.num_workers <= 0:
+            raise ValueError("NUM_WORKERS must be positive")
+        
+        if self.task_timeout <= 0:
+            raise ValueError("TASK_TIMEOUT must be positive")
+
+        # Logging Configuration validation
+        valid_log_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+        if self.log_level.upper() not in valid_log_levels:
+            raise ValueError(f"LOG_LEVEL must be one of: {', '.join(valid_log_levels)}")
+
+        # Validation Configuration validation
+        if self.min_audio_size <= 0:
+            raise ValueError("MIN_AUDIO_SIZE must be positive")
+        
+        if self.max_text_length <= 0:
+            raise ValueError("MAX_TEXT_LENGTH must be positive")
+        
+        if self.max_text_length > 100000:
+            raise ValueError("MAX_TEXT_LENGTH should not exceed 100,000 characters for performance reasons")
 
     @classmethod
     def load_config(cls) -> "AudioConfig":
