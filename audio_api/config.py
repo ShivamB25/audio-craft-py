@@ -11,6 +11,23 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+def _safe_int(value: str, default: int) -> int:
+    """
+    Safely convert a string to int, returning default on failure.
+    
+    Args:
+        value: String value to convert
+        default: Default value to return if conversion fails
+        
+    Returns:
+        Converted integer or default value
+    """
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return default
+
+
 class AudioConfig(BaseModel):
     """Centralized configuration for the audio generation library."""
 
@@ -32,33 +49,33 @@ class AudioConfig(BaseModel):
         description="Directory for output audio files",
     )
     default_sample_rate: int = Field(
-        default_factory=lambda: int(os.getenv("DEFAULT_SAMPLE_RATE", "24000")),
+        default_factory=lambda: _safe_int(os.getenv("DEFAULT_SAMPLE_RATE", "24000"), 24000),
         description="Default audio sample rate in Hz",
     )
     default_bit_depth: int = Field(
-        default_factory=lambda: int(os.getenv("DEFAULT_BIT_DEPTH", "16")),
+        default_factory=lambda: _safe_int(os.getenv("DEFAULT_BIT_DEPTH", "16"), 16),
         description="Default audio bit depth",
     )
     default_channels: int = Field(
-        default_factory=lambda: int(os.getenv("DEFAULT_CHANNELS", "1")),
+        default_factory=lambda: _safe_int(os.getenv("DEFAULT_CHANNELS", "1"), 1),
         description="Default number of audio channels",
     )
 
     # Performance Configuration
     max_context_tokens: int = Field(
-        default_factory=lambda: int(os.getenv("MAX_CONTEXT_TOKENS", "32000")),
+        default_factory=lambda: _safe_int(os.getenv("MAX_CONTEXT_TOKENS", "32000"), 32000),
         description="Maximum context tokens for Gemini TTS",
     )
     retry_attempts: int = Field(
-        default_factory=lambda: int(os.getenv("RETRY_ATTEMPTS", "3")),
+        default_factory=lambda: _safe_int(os.getenv("RETRY_ATTEMPTS", "3"), 3),
         description="Number of retry attempts for API calls",
     )
     retry_min_wait: int = Field(
-        default_factory=lambda: int(os.getenv("RETRY_MIN_WAIT", "4")),
+        default_factory=lambda: _safe_int(os.getenv("RETRY_MIN_WAIT", "4"), 4),
         description="Minimum wait time between retries (seconds)",
     )
     retry_max_wait: int = Field(
-        default_factory=lambda: int(os.getenv("RETRY_MAX_WAIT", "10")),
+        default_factory=lambda: _safe_int(os.getenv("RETRY_MAX_WAIT", "10"), 10),
         description="Maximum wait time between retries (seconds)",
     )
 
@@ -68,17 +85,17 @@ class AudioConfig(BaseModel):
         description="Redis connection URL",
     )
     redis_pool_size: int = Field(
-        default_factory=lambda: int(os.getenv("REDIS_POOL_SIZE", "10")),
+        default_factory=lambda: _safe_int(os.getenv("REDIS_POOL_SIZE", "10"), 10),
         description="Redis connection pool size",
     )
 
     # Worker Configuration
     num_workers: int = Field(
-        default_factory=lambda: int(os.getenv("NUM_WORKERS", "3")),
+        default_factory=lambda: _safe_int(os.getenv("NUM_WORKERS", "3"), 3),
         description="Number of worker processes",
     )
     task_timeout: int = Field(
-        default_factory=lambda: int(os.getenv("TASK_TIMEOUT", "300")),
+        default_factory=lambda: _safe_int(os.getenv("TASK_TIMEOUT", "300"), 300),
         description="Task timeout in seconds",
     )
 
@@ -95,11 +112,11 @@ class AudioConfig(BaseModel):
 
     # Validation Configuration
     min_audio_size: int = Field(
-        default_factory=lambda: int(os.getenv("MIN_AUDIO_SIZE", "1000")),
+        default_factory=lambda: _safe_int(os.getenv("MIN_AUDIO_SIZE", "1000"), 1000),
         description="Minimum audio file size in bytes",
     )
     max_text_length: int = Field(
-        default_factory=lambda: int(os.getenv("MAX_TEXT_LENGTH", "10000")),
+        default_factory=lambda: _safe_int(os.getenv("MAX_TEXT_LENGTH", "10000"), 10000),
         description="Maximum text length for TTS",
     )
 
