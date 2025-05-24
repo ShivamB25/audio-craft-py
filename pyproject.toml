@@ -24,11 +24,21 @@ dependencies = [
     "pydantic>=2.5.0",
     "aiofiles>=23.2.0",
     "redis>=6.1.0",
+    "tenacity>=9.1.2",
+    "ruff>=0.11.11",
 ]
 
 [project.optional-dependencies]
 async = ["redis>=5.0.0"]
-dev = ["pytest>=7.0.0", "pytest-asyncio>=0.21.0", "flake8>=6.0.0"]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-mock>=3.10.0",
+    "pytest-cov>=4.0.0",
+    "flake8>=6.0.0",
+    "black>=23.0.0",
+    "mypy>=1.0.0"
+]
 
 [project.urls]
 Homepage = "https://github.com/your-username/audio-api"

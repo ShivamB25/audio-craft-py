@@ -2,10 +2,16 @@ import wave
 import os
 import asyncio
 import aiofiles
-import logging
-from typing import Optional
+import time
+from typing import Optional, Dict, Any
 from google import genai
 from google.genai import types
+from tenacity import (
+    retry,
+    stop_after_attempt,
+    wait_exponential,
+    retry_if_exception_type,
+)
 from audio_api.models import (
     AudioRequest,
     AudioResponse,
@@ -13,8 +19,34 @@ from audio_api.models import (
     Language,
     SpeakerMode,
 )
+from audio_api.config import get_config, AudioConfig
+from audio_api.logging_config import get_logger, log_performance, log_error_with_context
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
+
+
+class TTSError(Exception):
+    """Base exception for TTS operations."""
+
+    pass
+
+
+class TTSAPIError(TTSError):
+    """API-related errors that should be retried."""
+
+    pass
+
+
+class TTSValidationError(TTSError):
+    """Validation errors that should not be retried."""
+
+    pass
+
+
+class TTSQuotaError(TTSError):
+    """Quota exceeded errors."""
+
+    pass
 
 
 class TTSService:
@@ -26,76 +58,169 @@ class TTSService:
     better reliability and simpler integration patterns.
     """
 
-    def __init__(self):
-        self.gemini_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-        self.default_model = os.getenv(
-            "DEFAULT_TTS_MODEL", "gemini-2.5-pro-preview-tts"
+    def __init__(
+        self,
+        config: Optional[AudioConfig] = None,
+        gemini_client: Optional[genai.Client] = None,
+    ):
+        """
+        Initialize TTS service with dependency injection support.
+
+        Args:
+            config: Configuration instance (uses global config if None)
+            gemini_client: Pre-configured Gemini client (creates new if None)
+        """
+        self.config = config or get_config()
+        self.gemini_client = gemini_client or genai.Client(
+            api_key=self.config.gemini_api_key
         )
 
     async def generate_audio(self, request: AudioRequest) -> AudioResponse:
-        """Generate audio from text using Gemini TTS."""
+        """Generate audio from text using Gemini TTS with retry logic and structured logging."""
+        start_time = time.time()
+        context = {
+            "text_length": len(request.text),
+            "language": request.language.value,
+            "model": request.model.value,
+            "speaker_mode": request.speaker_mode.value,
+            "voice_name": getattr(request.voice_config, "voice_name", None),
+        }
+
         try:
-            return await self._generate_gemini_audio(request)
+            logger.info("Starting audio generation", extra=context)
+            result = await self._generate_gemini_audio_with_retry(request)
+            duration = time.time() - start_time
+
+            # Log performance metrics
+            log_performance(
+                logger,
+                "audio_generation",
+                duration,
+                text_length=len(request.text),
+                language=request.language.value,
+                success=result.success,
+            )
+
+            return result
+
+        except TTSValidationError as e:
+            duration = time.time() - start_time
+            log_error_with_context(
+                logger, e, {**context, "duration": duration, "error_type": "validation"}
+            )
+            return AudioResponse(
+                success=False, message="Validation failed", error=str(e)
+            )
+        except TTSQuotaError as e:
+            duration = time.time() - start_time
+            log_error_with_context(
+                logger, e, {**context, "duration": duration, "error_type": "quota"}
+            )
+            return AudioResponse(
+                success=False, message="API quota exceeded", error=str(e)
+            )
         except Exception as e:
-            logger.error(f"Error generating audio: {str(e)}")
+            duration = time.time() - start_time
+            log_error_with_context(
+                logger, e, {**context, "duration": duration, "error_type": "unexpected"}
+            )
             return AudioResponse(
                 success=False, message="Failed to generate audio", error=str(e)
             )
 
+    async def _generate_gemini_audio_with_retry(
+        self, request: AudioRequest
+    ) -> AudioResponse:
+        """Generate audio with retry logic for API errors."""
+        # Create retry decorator with config values
+        retry_decorator = retry(
+            stop=stop_after_attempt(self.config.retry_attempts),
+            wait=wait_exponential(
+                multiplier=1,
+                min=self.config.retry_min_wait,
+                max=self.config.retry_max_wait,
+            ),
+            retry=retry_if_exception_type(TTSAPIError),
+        )
+
+        @retry_decorator
+        async def _generate_with_retry():
+            try:
+                return await self._generate_gemini_audio(request)
+            except Exception as e:
+                error_msg = str(e).lower()
+
+                # Categorize errors for appropriate retry behavior
+                if "invalid_argument" in error_msg or "validation" in error_msg:
+                    raise TTSValidationError(f"Invalid request parameters: {str(e)}")
+                elif "quota" in error_msg or "rate_limit" in error_msg:
+                    raise TTSQuotaError(f"API quota exceeded: {str(e)}")
+                elif (
+                    "unavailable" in error_msg
+                    or "timeout" in error_msg
+                    or "connection" in error_msg
+                ):
+                    logger.warning(f"Retryable API error: {str(e)}")
+                    raise TTSAPIError(f"API temporarily unavailable: {str(e)}")
+                else:
+                    # Unknown error, don't retry
+                    raise TTSError(f"Unknown TTS error: {str(e)}")
+
+        return await _generate_with_retry()
+
     async def _generate_gemini_audio(self, request: AudioRequest) -> AudioResponse:
         """Generate audio using Gemini TTS."""
-        try:
-            # Configure speech settings based on speaker mode
-            if request.speaker_mode == SpeakerMode.SINGLE:
-                speech_config = self._create_single_speaker_config(request)
-            else:  # MULTIPLE
-                speech_config = self._create_multi_speaker_config(request)
+        # Configure speech settings based on speaker mode
+        if request.speaker_mode == SpeakerMode.SINGLE:
+            speech_config = self._create_single_speaker_config(request)
+        else:  # MULTIPLE
+            speech_config = self._create_multi_speaker_config(request)
 
-            # Validate context window (32k tokens limit)
-            formatted_text = self._format_text_for_gemini(request)
-            self._validate_context_window(formatted_text)
+        # Validate context window (32k tokens limit)
+        formatted_text = self._format_text_for_gemini(request)
+        self._validate_context_window(formatted_text)
 
-            # Generate content with audio
-            response = await asyncio.to_thread(
-                self.gemini_client.models.generate_content,
-                model=request.model.value,
-                contents=formatted_text,
-                config=types.GenerateContentConfig(
-                    response_modalities=["AUDIO"],
-                    speech_config=speech_config,
-                ),
-            )
+        # Generate content with audio
+        response = await asyncio.to_thread(
+            self.gemini_client.models.generate_content,
+            model=request.model.value,
+            contents=formatted_text,
+            config=types.GenerateContentConfig(
+                response_modalities=["AUDIO"],
+                speech_config=speech_config,
+            ),
+        )
 
-            # Extract audio data
-            audio_data = response.candidates[0].content.parts[0].inline_data.data
+        # Validate response structure
+        if not response.candidates or not response.candidates[0].content.parts:
+            raise TTSAPIError("Invalid response structure from Gemini API")
 
-            # Generate filename
-            filename = request.output_filename or f"audio_{hash(request.text)}.wav"
-            if not filename.endswith(".wav"):
-                filename += ".wav"
+        # Extract and validate audio data
+        audio_data = response.candidates[0].content.parts[0].inline_data.data
+        self._validate_audio_data(audio_data)
 
-            # Save as WAV with specified format
-            file_path = await self._save_wav_file(
-                filename,
-                audio_data,
-                request.audio_format.channels,
-                request.audio_format.sample_rate,
-                request.audio_format.bit_depth // 8,
-            )
+        # Generate filename
+        filename = request.output_filename or f"audio_{hash(request.text)}.wav"
+        if not filename.endswith(".wav"):
+            filename += ".wav"
 
-            return AudioResponse(
-                success=True,
-                message="Audio generated successfully",
-                file_path=file_path,
-            )
+        # Save as WAV with specified format
+        file_path = await self._save_wav_file(
+            filename,
+            audio_data,
+            request.audio_format.channels,
+            request.audio_format.sample_rate,
+            request.audio_format.bit_depth // 8,
+        )
 
-        except Exception as e:
-            logger.error(f"Gemini TTS error: {str(e)}")
-            return AudioResponse(
-                success=False,
-                message="Failed to generate audio with Gemini",
-                error=str(e),
-            )
+        # Validate saved file
+        await self._validate_saved_audio_file(file_path)
+
+        return AudioResponse(
+            success=True,
+            message="Audio generated successfully",
+            file_path=file_path,
+        )
 
     def _create_single_speaker_config(
         self, request: AudioRequest
@@ -236,19 +361,58 @@ class TTSService:
         """
         Validate that the text doesn't exceed Gemini TTS context window limit.
 
-        Gemini TTS has a 32k token limit. We use a rough approximation of
+        Gemini TTS has a configurable token limit. We use a rough approximation of
         4 characters per token for validation.
         """
         # Rough approximation: 4 characters per token
         estimated_tokens = len(text) / 4
-        max_tokens = 32000
+        max_tokens = self.config.max_context_tokens
 
         if estimated_tokens > max_tokens:
-            raise ValueError(
+            raise TTSValidationError(
                 f"Text is too long. Estimated {estimated_tokens:.0f} tokens, "
                 f"but Gemini TTS supports maximum {max_tokens} tokens. "
                 f"Please reduce text length to approximately {max_tokens * 4} characters."
             )
+
+    def _validate_audio_data(self, audio_data: bytes) -> None:
+        """Validate audio data before processing."""
+        if not audio_data:
+            raise TTSValidationError("Received empty audio data from API")
+
+        min_size = max(100, self.config.min_audio_size // 10)  # Allow smaller raw data
+        if len(audio_data) < min_size:
+            raise TTSValidationError(
+                f"Audio data too small: {len(audio_data)} bytes (minimum: {min_size})"
+            )
+
+        # Check for common audio file headers (basic validation)
+        if not (audio_data.startswith(b"RIFF") or audio_data.startswith(b"\x00\x00")):
+            logger.warning("Audio data doesn't start with expected headers")
+
+    async def _validate_saved_audio_file(self, file_path: str) -> None:
+        """Validate the saved audio file."""
+        try:
+            if not os.path.exists(file_path):
+                raise TTSError(f"Audio file was not created: {file_path}")
+
+            file_size = os.path.getsize(file_path)
+            if file_size < self.config.min_audio_size:
+                raise TTSError(
+                    f"Generated audio file too small: {file_size} bytes (minimum: {self.config.min_audio_size})"
+                )
+
+            # Basic WAV file validation
+            async with aiofiles.open(file_path, "rb") as f:
+                header = await f.read(12)
+                if not header.startswith(b"RIFF") or b"WAVE" not in header:
+                    raise TTSError("Generated file is not a valid WAV file")
+
+            logger.info(f"Audio file validated: {file_path} ({file_size:,} bytes)")
+
+        except Exception as e:
+            logger.error(f"Audio file validation failed: {str(e)}")
+            raise TTSError(f"Audio file validation failed: {str(e)}")
 
     async def _save_wav_file(
         self,
@@ -258,23 +422,23 @@ class TTSService:
         rate: int = 24000,
         sample_width: int = 2,
     ) -> str:
-        """Save PCM data as WAV file with specified format (24kHz, 16-bit PCM)."""
+        """Save PCM data as WAV file with specified format."""
         try:
             # Ensure output directory exists
-            os.makedirs("output", exist_ok=True)
-            file_path = os.path.join("output", filename)
+            os.makedirs(self.config.output_dir, exist_ok=True)
+            file_path = os.path.join(self.config.output_dir, filename)
 
-            # Use asyncio.to_thread for file I/O
-            await asyncio.to_thread(
-                self._write_wav_file, file_path, pcm_data, channels, rate, sample_width
+            # Use async file operations
+            await self._write_wav_file_async(
+                file_path, pcm_data, channels, rate, sample_width
             )
 
             return file_path
         except Exception as e:
             logger.error(f"Error saving WAV file: {str(e)}")
-            raise
+            raise TTSError(f"Failed to save audio file: {str(e)}")
 
-    def _write_wav_file(
+    async def _write_wav_file_async(
         self,
         file_path: str,
         pcm_data: bytes,
@@ -282,9 +446,40 @@ class TTSService:
         rate: int,
         sample_width: int,
     ):
-        """Synchronous WAV file writing."""
-        with wave.open(file_path, "wb") as wf:
-            wf.setnchannels(channels)
-            wf.setsampwidth(sample_width)
-            wf.setframerate(rate)
-            wf.writeframes(pcm_data)
+        """Asynchronous WAV file writing."""
+        # Create WAV header
+        wav_header = self._create_wav_header(
+            len(pcm_data), channels, rate, sample_width
+        )
+
+        # Write file asynchronously
+        async with aiofiles.open(file_path, "wb") as f:
+            await f.write(wav_header)
+            await f.write(pcm_data)
+
+    def _create_wav_header(
+        self, data_size: int, channels: int, rate: int, sample_width: int
+    ) -> bytes:
+        """Create WAV file header."""
+        # WAV file header structure
+        chunk_size = data_size + 36
+        subchunk2_size = data_size
+        byte_rate = rate * channels * sample_width
+        block_align = channels * sample_width
+        bits_per_sample = sample_width * 8
+
+        header = b"RIFF"
+        header += chunk_size.to_bytes(4, "little")
+        header += b"WAVE"
+        header += b"fmt "
+        header += (16).to_bytes(4, "little")  # Subchunk1Size
+        header += (1).to_bytes(2, "little")  # AudioFormat (PCM)
+        header += channels.to_bytes(2, "little")
+        header += rate.to_bytes(4, "little")
+        header += byte_rate.to_bytes(4, "little")
+        header += block_align.to_bytes(2, "little")
+        header += bits_per_sample.to_bytes(2, "little")
+        header += b"data"
+        header += subchunk2_size.to_bytes(4, "little")
+
+        return header

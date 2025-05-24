@@ -17,6 +17,8 @@ from .models import (
     MultiSpeakerConfig,
 )
 from .services import TTSService, QueueService, WorkerService, WorkerManager
+from .config import AudioConfig, get_config, reload_config
+from .logging_config import setup_logging, get_logger
 
 __all__ = [
     "AudioRequest",
@@ -35,4 +37,9 @@ __all__ = [
     "QueueService",
     "WorkerService",
     "WorkerManager",
+    "AudioConfig",
+    "get_config",
+    "reload_config",
+    "setup_logging",
+    "get_logger",
 ]

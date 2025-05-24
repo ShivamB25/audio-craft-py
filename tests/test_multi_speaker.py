@@ -205,7 +205,7 @@ request = AudioRequest(
         """
 # Multi-Speaker Conversation
 from audio_api import (
-    AudioRequest, SpeakerMode, MultiSpeakerConfig, 
+    AudioRequest, SpeakerMode, MultiSpeakerConfig,
     SpeakerConfig, VoiceName
 )
 
@@ -275,9 +275,9 @@ async def main():
         # Show usage examples
         await demonstrate_usage_patterns()
 
-        print(f"\n✅ Multi-speaker TTS tests completed!")
-        print(f"   📁 Audio files saved in: output/")
-        print(f"   🎧 Listen to the files to hear the different speakers and styles")
+        print("\n✅ Multi-speaker TTS tests completed!")
+        print("   📁 Audio files saved in: output/")
+        print("   🎧 Listen to the files to hear the different speakers and styles")
 
     except Exception as e:
         print(f"❌ Test failed: {e}")

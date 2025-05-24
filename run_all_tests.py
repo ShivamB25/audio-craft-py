@@ -167,13 +167,13 @@ class TestRunner:
         print(f"❌ Failed: {failed}")
         print(f"📊 Success Rate: {(passed/len(self.test_results)*100):.1f}%")
 
-        print(f"\n📋 Detailed Results:")
+        print("\n📋 Detailed Results:")
         for i, result in enumerate(self.test_results, 1):
             status = "✅ PASS" if result["success"] else "❌ FAIL"
             print(f"  {i}. {status} - {result['description']}")
 
         if failed > 0:
-            print(f"\n🔍 Failed Test Details:")
+            print("\n🔍 Failed Test Details:")
             for result in self.test_results:
                 if not result["success"]:
                     print(f"\n❌ {result['description']}")
@@ -184,7 +184,7 @@ class TestRunner:
                         if line.strip():
                             print(f"   {line}")
 
-        print(f"\n📁 Generated Files:")
+        print("\n📁 Generated Files:")
         if os.path.exists("output"):
             output_files = os.listdir("output")
             if output_files:
@@ -198,18 +198,18 @@ class TestRunner:
         # Overall result
         if failed == 0:
             print(
-                f"\n🎉 ALL TESTS PASSED! The Audio Generation Library is working perfectly."
+                "\n🎉 ALL TESTS PASSED! The Audio Generation Library is working perfectly."
             )
             print(
-                f"   🎧 You can listen to the generated audio files in the output/ directory"
+                "   🎧 You can listen to the generated audio files in the output/ directory"
             )
-            print(f"   📚 Check the docs/ directory for comprehensive usage examples")
+            print("   📚 Check the docs/ directory for comprehensive usage examples")
         else:
             print(
                 f"\n⚠️  {failed} test(s) failed. Please check the error details above."
             )
             print(
-                f"   💡 Common issues: API key problems, network connectivity, missing dependencies"
+                "   💡 Common issues: API key problems, network connectivity, missing dependencies"
             )
 
         print("=" * 70)

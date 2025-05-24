@@ -116,13 +116,13 @@ async def test_language_support():
     print(f"❌ Failed: {failed}/{len(results)}")
 
     if successful > 0:
-        print(f"\n🎉 Language support is working! Generated files:")
+        print("\n🎉 Language support is working! Generated files:")
         for result in results:
             if result["status"] == "SUCCESS":
                 print(f"   • {result['language']}: {result['file']}")
 
     if failed > 0:
-        print(f"\n⚠️  Some languages failed:")
+        print("\n⚠️  Some languages failed:")
         for result in results:
             if result["status"] != "SUCCESS":
                 print(

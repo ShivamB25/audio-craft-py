@@ -120,7 +120,7 @@ request = AudioRequest(
         """
 # All available voice characteristics:
 # Bright: Zephyr, Autonoe
-# Upbeat: Puck, Laomedeia  
+# Upbeat: Puck, Laomedeia
 # Informative: Charon, Rasalgethi
 # Firm: Kore (default), Orus, Alnilam
 # Excitable: Fenrir
@@ -165,10 +165,10 @@ async def main():
         await test_voice_options()
         await demonstrate_voice_usage()
 
-        print(f"\n✅ Voice options test completed!")
-        print(f"   📁 Audio files saved in: output/")
+        print("\n✅ Voice options test completed!")
+        print("   📁 Audio files saved in: output/")
         print(
-            f"   🎧 You can listen to the generated audio files to hear the differences"
+            "   🎧 You can listen to the generated audio files to hear the differences"
         )
 
     except Exception as e:
