@@ -4,7 +4,7 @@ Centralized configuration management for the Audio Generation Library.
 
 import os
 from typing import Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -120,12 +120,16 @@ class AudioConfig(BaseModel):
         description="Maximum text length for TTS",
     )
 
+    @field_validator('gemini_api_key')
+    @classmethod
+    def validate_gemini_api_key(cls, v: str) -> str:
+        """Validate that the Gemini API key is not empty."""
+        if not v or not v.strip():
+            raise ValueError("GEMINI_API_KEY is required and cannot be empty")
+        return v
+
     def validate_config(self) -> None:
         """Validate configuration values."""
-        # API Configuration validation
-        if not self.gemini_api_key:
-            raise ValueError("GEMINI_API_KEY is required")
-
         # Audio Configuration validation
         if self.default_sample_rate <= 0:
             raise ValueError("DEFAULT_SAMPLE_RATE must be positive")
