@@ -1,9 +1,0 @@
-# Core dependencies for audio generation library
-google-genai>=1.16.1
-python-dotenv>=1.1.0
-pydantic>=2.5.0
-aiofiles>=23.2.0
-
-# Optional dependencies (install only if needed)
-# For Redis-based persistent queuing:
-# redis>=5.0.0
