@@ -68,7 +68,7 @@ async def multi_language_example():
         request = AudioRequest(
             text=text,
             language=lang,
-            output_filename=f"multilang_{lang.value.replace('-', '_')}.wav"
+            output_filename=f"multilang_{lang.value.replace('-', '_')}.wav",
         )
 
         result = await tts.generate_audio(request)
@@ -77,8 +77,10 @@ async def multi_language_example():
             print(f"✅ {lang.name}: {result.file_path}")
         else:
             print(f"❌ {lang.name}: {result.error}")
-    
-    print(f"\n📊 All 24 supported languages: {', '.join([lang.value for lang in Language])}")
+
+    print(
+        f"\n📊 All 24 supported languages: {', '.join([lang.value for lang in Language])}"
+    )
 
 
 async def custom_voice_example():

@@ -6,7 +6,13 @@ import logging
 from typing import Optional
 from google import genai
 from google.genai import types
-from audio_api.models import AudioRequest, AudioResponse, VoiceModel, Language, SpeakerMode
+from audio_api.models import (
+    AudioRequest,
+    AudioResponse,
+    VoiceModel,
+    Language,
+    SpeakerMode,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -14,15 +20,17 @@ logger = logging.getLogger(__name__)
 class TTSService:
     """
     Text-to-Speech service using Google Gemini TTS API.
-    
+
     Note: Streaming audio is not supported in this library. While the Gemini API
     supports streaming, this library focuses on file-based audio generation for
     better reliability and simpler integration patterns.
     """
-    
+
     def __init__(self):
         self.gemini_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-        self.default_model = os.getenv("DEFAULT_TTS_MODEL", "gemini-2.5-pro-preview-tts")
+        self.default_model = os.getenv(
+            "DEFAULT_TTS_MODEL", "gemini-2.5-pro-preview-tts"
+        )
 
     async def generate_audio(self, request: AudioRequest) -> AudioResponse:
         """Generate audio from text using Gemini TTS."""
@@ -89,7 +97,9 @@ class TTSService:
                 error=str(e),
             )
 
-    def _create_single_speaker_config(self, request: AudioRequest) -> types.SpeechConfig:
+    def _create_single_speaker_config(
+        self, request: AudioRequest
+    ) -> types.SpeechConfig:
         """Create speech config for single speaker."""
         voice_config = types.VoiceConfig(
             prebuilt_voice_config=types.PrebuiltVoiceConfig(
@@ -101,7 +111,7 @@ class TTSService:
     def _create_multi_speaker_config(self, request: AudioRequest) -> types.SpeechConfig:
         """Create speech config for multi-speaker."""
         speaker_voice_configs = []
-        
+
         for speaker in request.multi_speaker_config.speakers:
             speaker_voice_config = types.SpeakerVoiceConfig(
                 speaker=speaker.speaker_name,
@@ -109,32 +119,32 @@ class TTSService:
                     prebuilt_voice_config=types.PrebuiltVoiceConfig(
                         voice_name=speaker.voice_name
                     )
-                )
+                ),
             )
             speaker_voice_configs.append(speaker_voice_config)
-        
+
         multi_speaker_config = types.MultiSpeakerVoiceConfig(
             speaker_voice_configs=speaker_voice_configs
         )
-        
+
         return types.SpeechConfig(multi_speaker_voice_config=multi_speaker_config)
 
     def _format_text_for_gemini(self, request: AudioRequest) -> str:
         """Format text with language, speaker, and style instructions for Gemini."""
-        
+
         # Get language prefix
         language_prefix = self._get_language_prefix(request.language)
-        
+
         # Get style instructions for speed/pitch
         style_instructions = self._get_style_instructions(request)
-        
+
         # Combine all instructions
         instructions = []
         if language_prefix:
             instructions.append(language_prefix)
         if style_instructions:
             instructions.append(style_instructions)
-        
+
         # Format final text
         if instructions:
             instruction_text = " ".join(instructions)
@@ -156,7 +166,6 @@ class TTSService:
             Language.JAPANESE: "[Language: Japanese]",
             Language.KOREAN: "[Language: Korean]",
             Language.CHINESE: "[Language: Chinese]",
-            
             # All 24 supported languages with BCP-47 codes
             Language.ARABIC_EGYPTIAN: "[Language: Arabic (Egyptian)]",
             Language.ENGLISH_US: "",  # Default, no prefix needed
@@ -190,13 +199,13 @@ class TTSService:
         if request.speaker_mode == SpeakerMode.MULTIPLE:
             # For multi-speaker, style is typically controlled per speaker in the text
             return ""
-        
+
         voice_config = request.voice_config
         if not voice_config or (not voice_config.speed and not voice_config.pitch):
             return ""
-        
+
         instructions = []
-        
+
         # Convert speed to natural language
         if voice_config.speed:
             if voice_config.speed < 0.8:
@@ -207,7 +216,7 @@ class TTSService:
                 instructions.append("speak a bit slowly")
             elif voice_config.speed > 1.1:
                 instructions.append("speak a bit faster")
-        
+
         # Convert pitch to natural language
         if voice_config.pitch:
             if voice_config.pitch < 0.8:
@@ -218,7 +227,7 @@ class TTSService:
                 instructions.append("with a slightly lower pitch")
             elif voice_config.pitch > 1.1:
                 instructions.append("with a slightly higher pitch")
-        
+
         if instructions:
             return f"[Style: {', '.join(instructions)}]"
         return ""
@@ -226,14 +235,14 @@ class TTSService:
     def _validate_context_window(self, text: str) -> None:
         """
         Validate that the text doesn't exceed Gemini TTS context window limit.
-        
+
         Gemini TTS has a 32k token limit. We use a rough approximation of
         4 characters per token for validation.
         """
         # Rough approximation: 4 characters per token
         estimated_tokens = len(text) / 4
         max_tokens = 32000
-        
+
         if estimated_tokens > max_tokens:
             raise ValueError(
                 f"Text is too long. Estimated {estimated_tokens:.0f} tokens, "

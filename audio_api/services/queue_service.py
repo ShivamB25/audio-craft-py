@@ -1,5 +1,6 @@
 try:
     import redis
+
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False
@@ -23,19 +24,23 @@ logger = logging.getLogger(__name__)
 
 
 class QueueService:
-    def __init__(self, use_redis: bool = False, redis_url: str = "redis://localhost:6379/0"):
+    def __init__(
+        self, use_redis: bool = False, redis_url: str = "redis://localhost:6379/0"
+    ):
         """
         Initialize queue service with optional Redis backend.
-        
+
         Args:
             use_redis: If True, use Redis for persistent queuing. If False, use in-memory queuing.
             redis_url: Redis connection URL (only used if use_redis=True)
         """
         self.use_redis = use_redis
-        
+
         if use_redis:
             if not REDIS_AVAILABLE:
-                raise ImportError("Redis is not installed. Install with: pip install redis")
+                raise ImportError(
+                    "Redis is not installed. Install with: pip install redis"
+                )
             self.redis_client = redis.from_url(redis_url, decode_responses=True)
             self.task_queue = "audio_tasks"
             self.result_prefix = "result:"
@@ -76,10 +81,12 @@ class QueueService:
                 self._task_queue.appendleft(task_data)
                 self._results[task_id] = {
                     "status": "pending",
-                    "created_at": task_data["created_at"]
+                    "created_at": task_data["created_at"],
                 }
 
-            logger.info(f"Enqueued task {task_id} ({'Redis' if self.use_redis else 'memory'})")
+            logger.info(
+                f"Enqueued task {task_id} ({'Redis' if self.use_redis else 'memory'})"
+            )
             return task_id
 
         except Exception as e:
@@ -137,7 +144,9 @@ class QueueService:
                 # In-memory backend
                 self._batches[batch_id] = batch_data
 
-            logger.info(f"Enqueued batch {batch_id} with {len(task_ids)} tasks ({'Redis' if self.use_redis else 'memory'})")
+            logger.info(
+                f"Enqueued batch {batch_id} with {len(task_ids)} tasks ({'Redis' if self.use_redis else 'memory'})"
+            )
             return batch_id
 
         except Exception as e:
@@ -200,7 +209,9 @@ class QueueService:
             if self.use_redis:
                 # Redis backend
                 batch_key = f"{self.batch_prefix}{batch_id}"
-                batch_data_str = await asyncio.to_thread(self.redis_client.get, batch_key)
+                batch_data_str = await asyncio.to_thread(
+                    self.redis_client.get, batch_key
+                )
                 if not batch_data_str:
                     logger.warning(f"Batch {batch_id} not found")
                     return
