@@ -1,0 +1,44 @@
+[project]
+name = "audio-lib"
+version = "1.0.0"
+description = "A simple, powerful Python library for text-to-speech generation using Google Gemini TTS"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Audio API Team"}
+]
+keywords = ["tts", "text-to-speech", "audio", "gemini", "speech-synthesis"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Sound/Audio :: Speech",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+requires-python = ">=3.12"
+dependencies = [
+    "google-genai>=1.16.1",
+    "python-dotenv>=1.1.0",
+    "pydantic>=2.5.0",
+    "aiofiles>=23.2.0",
+    "redis>=6.1.0",
+]
+
+[project.optional-dependencies]
+async = ["redis>=5.0.0"]
+dev = ["pytest>=7.0.0", "pytest-asyncio>=0.21.0", "flake8>=6.0.0"]
+
+[project.urls]
+Homepage = "https://github.com/your-username/audio-api"
+Documentation = "https://github.com/your-username/audio-api#readme"
+Repository = "https://github.com/your-username/audio-api"
+Issues = "https://github.com/your-username/audio-api/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["audio_api"]
