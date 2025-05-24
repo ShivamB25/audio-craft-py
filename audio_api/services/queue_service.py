@@ -112,7 +112,7 @@ class QueueService:
 
         if self.use_redis and self._redis_pool:
             try:
-                await self._redis_pool.disconnect()
+                self._redis_pool.disconnect()
                 logger.info("Redis connection pool closed")
             except Exception as e:
                 logger.error(f"Error closing Redis pool: {str(e)}")

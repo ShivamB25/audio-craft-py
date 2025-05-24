@@ -227,6 +227,9 @@ class AudioResponse(BaseModel):
     file_path: Optional[str] = None
     duration: Optional[float] = None
     error: Optional[str] = None
+    processing_time: Optional[float] = Field(
+        default=None, description="Time taken to process the request in seconds"
+    )
 
 
 class BatchAudioResponse(BaseModel):
