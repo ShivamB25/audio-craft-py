@@ -11,11 +11,10 @@ except ImportError:
 import json
 import uuid
 import asyncio
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 from datetime import datetime
 import logging
 from collections import deque
-from contextlib import asynccontextmanager
 from audio_api.models import (
     AudioRequest,
     BatchAudioRequest,

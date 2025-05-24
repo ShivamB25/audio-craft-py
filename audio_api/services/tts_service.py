@@ -1,9 +1,8 @@
-import wave
 import os
 import asyncio
 import aiofiles
 import time
-from typing import Optional, Dict, Any
+from typing import Optional
 from google import genai
 from google.genai import types
 from tenacity import (
@@ -15,7 +14,6 @@ from tenacity import (
 from audio_api.models import (
     AudioRequest,
     AudioResponse,
-    VoiceModel,
     Language,
     SpeakerMode,
 )

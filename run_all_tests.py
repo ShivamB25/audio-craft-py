@@ -4,12 +4,11 @@ Comprehensive test runner for the Audio Generation Library.
 Runs all test scripts and provides a summary of results.
 """
 
-import asyncio
 import subprocess
 import sys
 import os
 from datetime import datetime
-from typing import List, Tuple
+from typing import Tuple
 
 
 class TestRunner:

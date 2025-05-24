@@ -3,17 +3,13 @@ Unit tests for TTSService with mocking and comprehensive coverage.
 """
 
 import pytest
-import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 from audio_api.services.tts_service import (
     TTSService,
-    TTSError,
     TTSValidationError,
-    TTSAPIError,
 )
 from audio_api.models import (
     AudioRequest,
-    AudioResponse,
     VoiceModel,
     Language,
     SpeakerMode,
