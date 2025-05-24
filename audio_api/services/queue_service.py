@@ -82,7 +82,7 @@ class QueueService:
             )
         except Exception as e:
             logger.error(f"Failed to initialize Redis pool: {str(e)}")
-            raise QueueServiceError(f"Redis initialization failed: {str(e)}")
+            raise QueueServiceError(f"Redis initialization failed: {str(e)}") from e
 
     async def health_check(self) -> bool:
         """Check if the queue service is healthy."""
@@ -175,7 +175,7 @@ class QueueService:
             raise
         except Exception as e:
             logger.error(f"Error enqueuing task: {str(e)}")
-            raise QueueServiceError(f"Failed to enqueue task: {str(e)}")
+            raise QueueServiceError(f"Failed to enqueue task: {str(e)}") from e
 
     async def enqueue_batch_tasks(self, batch_request: BatchAudioRequest) -> str:
         """Enqueue multiple audio generation tasks as a batch."""
@@ -305,7 +305,7 @@ class QueueService:
             raise
         except Exception as e:
             logger.error(f"Error updating task result: {str(e)}")
-            raise QueueServiceError(f"Failed to update task result: {str(e)}")
+            raise QueueServiceError(f"Failed to update task result: {str(e)}") from e
 
     async def update_batch_progress(self, batch_id: str, task_id: str, success: bool):
         """Update batch progress when a task completes."""

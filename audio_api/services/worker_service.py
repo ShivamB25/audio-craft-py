@@ -220,7 +220,7 @@ class WorkerManager:
 
             except Exception as e:
                 logger.error(f"Failed to start worker {i+1}: {str(e)}")
-                raise WorkerServiceError(f"Failed to start worker {i+1}: {str(e)}")
+                raise WorkerServiceError(f"Failed to start worker {i+1}: {str(e)}") from e
 
         logger.info(f"All {self.num_workers} workers started successfully")
 

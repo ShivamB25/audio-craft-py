@@ -150,19 +150,19 @@ class TTSService:
 
                 # Categorize errors for appropriate retry behavior
                 if "invalid_argument" in error_msg or "validation" in error_msg:
-                    raise TTSValidationError(f"Invalid request parameters: {str(e)}")
+                    raise TTSValidationError(f"Invalid request parameters: {str(e)}") from e
                 elif "quota" in error_msg or "rate_limit" in error_msg:
-                    raise TTSQuotaError(f"API quota exceeded: {str(e)}")
+                    raise TTSQuotaError(f"API quota exceeded: {str(e)}") from e
                 elif (
                     "unavailable" in error_msg
                     or "timeout" in error_msg
                     or "connection" in error_msg
                 ):
                     logger.warning(f"Retryable API error: {str(e)}")
-                    raise TTSAPIError(f"API temporarily unavailable: {str(e)}")
+                    raise TTSAPIError(f"API temporarily unavailable: {str(e)}") from e
                 else:
                     # Unknown error, don't retry
-                    raise TTSError(f"Unknown TTS error: {str(e)}")
+                    raise TTSError(f"Unknown TTS error: {str(e)}") from e
 
         return await _generate_with_retry()
 
@@ -410,7 +410,7 @@ class TTSService:
 
         except Exception as e:
             logger.error(f"Audio file validation failed: {str(e)}")
-            raise TTSError(f"Audio file validation failed: {str(e)}")
+            raise TTSError(f"Audio file validation failed: {str(e)}") from e
 
     async def _save_wav_file(
         self,
@@ -434,7 +434,7 @@ class TTSService:
             return file_path
         except Exception as e:
             logger.error(f"Error saving WAV file: {str(e)}")
-            raise TTSError(f"Failed to save audio file: {str(e)}")
+            raise TTSError(f"Failed to save audio file: {str(e)}") from e
 
     async def _write_wav_file_async(
         self,
