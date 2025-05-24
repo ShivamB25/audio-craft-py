@@ -25,6 +25,12 @@ Complete guide to configuring the Audio Generation Library for optimal performan
    # Required: Your Gemini API key
    GEMINI_API_KEY=your_actual_api_key_here
    
+   # Optional: Default TTS model selection
+   # Available options:
+   # - gemini-2.5-pro-preview-tts (high quality, slower)
+   # - gemini-2.5-flash-preview-tts (faster, good quality)
+   DEFAULT_TTS_MODEL=gemini-2.5-pro-preview-tts
+   
    # Optional: Redis configuration (for advanced async processing)
    REDIS_URL=redis://localhost:6379/0
    
@@ -76,6 +82,109 @@ import os
 
 # Only for testing - never commit API keys to code
 os.environ["GEMINI_API_KEY"] = "your_api_key_here"
+```
+
+## 🤖 Model Configuration
+
+### TTS Model Selection
+
+The library supports two Gemini TTS models with different performance characteristics:
+
+```python
+from audio_api import VoiceModel, AudioRequest
+
+# High quality model (default)
+pro_request = AudioRequest(
+    text="High quality audio generation",
+    model=VoiceModel.GEMINI_TTS_PRO
+)
+
+# Fast model for real-time applications
+flash_request = AudioRequest(
+    text="Fast audio generation",
+    model=VoiceModel.GEMINI_TTS_FLASH
+)
+
+# Legacy alias (same as PRO)
+legacy_request = AudioRequest(
+    text="Backward compatibility",
+    model=VoiceModel.GEMINI_TTS
+)
+```
+
+### Model Comparison
+
+| Feature | Pro Model | Flash Model |
+|---------|-----------|-------------|
+| **Quality** | Highest | High |
+| **Speed** | Slower | Faster |
+| **Use Case** | Final production, audiobooks | Real-time, interactive apps |
+| **Cost** | Higher | Lower |
+| **Recommended For** | Quality-critical applications | High-volume, speed-critical apps |
+
+### Environment-Based Model Selection
+
+```python
+import os
+from audio_api import VoiceModel, AudioRequest
+
+# The DEFAULT_TTS_MODEL environment variable sets the default,
+# but can always be overridden in code
+
+# 1. Using environment default (no model specified)
+default_request = AudioRequest(
+    text="This uses the DEFAULT_TTS_MODEL from environment"
+    # model parameter omitted - uses environment default
+)
+
+# 2. Explicitly overriding the environment default
+override_request = AudioRequest(
+    text="This overrides the environment default",
+    model=VoiceModel.GEMINI_TTS_FLASH  # Explicit override
+)
+
+# 3. Dynamic model selection
+def create_request_with_model(text: str, use_fast_model: bool = False):
+    """Create request with dynamic model selection."""
+    model = VoiceModel.GEMINI_TTS_FLASH if use_fast_model else VoiceModel.GEMINI_TTS_PRO
+    
+    return AudioRequest(
+        text=text,
+        model=model  # Always overrides environment default
+    )
+
+# Usage examples
+fast_request = create_request_with_model("Quick generation", use_fast_model=True)
+quality_request = create_request_with_model("High quality generation", use_fast_model=False)
+```
+
+### Model Override Priority
+
+The model selection follows this priority order:
+
+1. **Explicit model in code** (highest priority)
+2. **Environment variable** (`DEFAULT_TTS_MODEL`)
+3. **Library default** (`gemini-2.5-pro-preview-tts`)
+
+```python
+# Example showing override behavior
+
+# Environment: DEFAULT_TTS_MODEL=gemini-2.5-flash-preview-tts
+
+# This uses Flash model (from environment)
+env_request = AudioRequest(text="Uses environment default")
+
+# This uses Pro model (explicit override)
+override_request = AudioRequest(
+    text="Explicit override",
+    model=VoiceModel.GEMINI_TTS_PRO
+)
+
+# This also uses Pro model (explicit override)
+explicit_request = AudioRequest(
+    text="Another override",
+    model=VoiceModel.GEMINI_TTS_FLASH
+)
 ```
 
 ## 🎛️ Audio Configuration

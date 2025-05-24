@@ -518,14 +518,61 @@ docs/
   - Professional-grade conversation generation
   - Enhanced voice pairing recommendations
 
+## Recent Major Updates (Phase 7 - API Alignment & Model Enhancement)
+
+### Gemini API Alignment (Latest)
+- **Problem**: Library needed to align with latest Gemini TTS API documentation and best practices
+- **Solution**: Updated models and service to match official API patterns exactly
+- **Implementation**:
+  - Added `GEMINI_TTS_FLASH` model option alongside existing `GEMINI_TTS_PRO`
+  - Dynamic model selection from request instead of hardcoded model
+  - Context window validation (32k token limit with clear error messages)
+  - Enhanced documentation with streaming decision rationale
+- **Benefits**:
+  - 100% API compatibility with official Gemini TTS documentation
+  - Better performance options (Flash vs Pro models)
+  - Proactive validation prevents API errors
+  - Clear guidance on library limitations
+
+### Streaming Decision (Latest)
+- **Decision**: Explicitly not supporting streaming audio in this library
+- **Rationale**:
+  - Library focuses on file-based audio generation for reliability
+  - Simpler integration patterns for most use cases
+  - Better error handling and recovery with file-based approach
+  - Streaming adds complexity without significant benefit for target use cases
+- **Documentation**: Added clear note in TTSService class explaining this decision
+- **Alternative**: Users needing streaming can use Gemini API directly
+
+### Model Selection Enhancement (Latest)
+- **Before**: Hardcoded `gemini-2.5-pro-preview-tts` model
+- **After**: Dynamic model selection from `AudioRequest.model` field
+- **Options Available**:
+  - `GEMINI_TTS_PRO`: High-quality, slower generation
+  - `GEMINI_TTS_FLASH`: Faster generation, good quality
+  - `GEMINI_TTS`: Backward compatibility alias for Pro model
+- **Implementation**: Service now uses `request.model.value` for API calls
+
+### Context Window Validation (Latest)
+- **Problem**: Users could submit text exceeding Gemini's 32k token limit
+- **Solution**: Proactive validation with clear error messages
+- **Implementation**:
+  - Rough estimation using 4 characters per token approximation
+  - Clear error message with specific guidance on text length limits
+  - Validation occurs before API call to prevent wasted requests
+- **Benefits**: Better user experience with immediate feedback on text length issues
+
 ## Future Considerations
 
 ### Potential Enhancements
 1. **Additional TTS Engines**: Support for other providers
 2. **Audio Effects**: Post-processing capabilities
-3. **Streaming**: Real-time audio generation
-4. **Caching**: Intelligent caching for repeated requests
-5. **Language Auto-detection**: Automatic language detection from text
+3. **Caching**: Intelligent caching for repeated requests
+4. **Language Auto-detection**: Automatic language detection from text
+5. **Advanced Context Window**: More precise token counting using actual tokenizer
+
+### Explicitly Not Planned
+1. **Streaming Audio**: Decided against for simplicity and reliability reasons
 
 ### Scalability Notes
 - **Current**: Dual-backend queue system (memory/Redis)

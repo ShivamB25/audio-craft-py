@@ -1,9 +1,14 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List, Literal
 from enum import Enum
+import os
 
 
 class VoiceModel(str, Enum):
+    GEMINI_TTS_PRO = "gemini-2.5-pro-preview-tts"
+    GEMINI_TTS_FLASH = "gemini-2.5-flash-preview-tts"
+    
+    # Backward compatibility
     GEMINI_TTS = "gemini-2.5-pro-preview-tts"
 
 
@@ -158,7 +163,8 @@ class AudioRequest(BaseModel):
         ..., min_length=1, max_length=10000, description="Text to convert to speech"
     )
     model: VoiceModel = Field(
-        default=VoiceModel.GEMINI_TTS, description="TTS model to use"
+        default_factory=lambda: VoiceModel(os.getenv("DEFAULT_TTS_MODEL", "gemini-2.5-pro-preview-tts")),
+        description="TTS model to use (configurable via DEFAULT_TTS_MODEL env var)"
     )
     speaker_mode: SpeakerMode = Field(
         default=SpeakerMode.SINGLE, description="Single or multiple speaker mode"

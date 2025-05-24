@@ -3,6 +3,7 @@ import os
 import asyncio
 import aiofiles
 import logging
+from typing import Optional
 from google import genai
 from google.genai import types
 from audio_api.models import AudioRequest, AudioResponse, VoiceModel, Language, SpeakerMode
@@ -11,8 +12,17 @@ logger = logging.getLogger(__name__)
 
 
 class TTSService:
+    """
+    Text-to-Speech service using Google Gemini TTS API.
+    
+    Note: Streaming audio is not supported in this library. While the Gemini API
+    supports streaming, this library focuses on file-based audio generation for
+    better reliability and simpler integration patterns.
+    """
+    
     def __init__(self):
         self.gemini_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+        self.default_model = os.getenv("DEFAULT_TTS_MODEL", "gemini-2.5-pro-preview-tts")
 
     async def generate_audio(self, request: AudioRequest) -> AudioResponse:
         """Generate audio from text using Gemini TTS."""
@@ -33,11 +43,15 @@ class TTSService:
             else:  # MULTIPLE
                 speech_config = self._create_multi_speaker_config(request)
 
+            # Validate context window (32k tokens limit)
+            formatted_text = self._format_text_for_gemini(request)
+            self._validate_context_window(formatted_text)
+
             # Generate content with audio
             response = await asyncio.to_thread(
                 self.gemini_client.models.generate_content,
-                model="gemini-2.5-pro-preview-tts",
-                contents=self._format_text_for_gemini(request),
+                model=request.model.value,
+                contents=formatted_text,
                 config=types.GenerateContentConfig(
                     response_modalities=["AUDIO"],
                     speech_config=speech_config,
@@ -208,6 +222,24 @@ class TTSService:
         if instructions:
             return f"[Style: {', '.join(instructions)}]"
         return ""
+
+    def _validate_context_window(self, text: str) -> None:
+        """
+        Validate that the text doesn't exceed Gemini TTS context window limit.
+        
+        Gemini TTS has a 32k token limit. We use a rough approximation of
+        4 characters per token for validation.
+        """
+        # Rough approximation: 4 characters per token
+        estimated_tokens = len(text) / 4
+        max_tokens = 32000
+        
+        if estimated_tokens > max_tokens:
+            raise ValueError(
+                f"Text is too long. Estimated {estimated_tokens:.0f} tokens, "
+                f"but Gemini TTS supports maximum {max_tokens} tokens. "
+                f"Please reduce text length to approximately {max_tokens * 4} characters."
+            )
 
     async def _save_wav_file(
         self,
