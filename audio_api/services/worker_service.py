@@ -17,16 +17,26 @@ class WorkerServiceError(Exception):
 
 
 class WorkerService:
-    def __init__(self, config: Optional[AudioConfig] = None):
+    def __init__(
+        self,
+        config: Optional[AudioConfig] = None,
+        queue_service: Optional[QueueService] = None,
+        tts_service: Optional[TTSService] = None
+    ):
         """
         Initialize worker service with dependency injection.
 
         Args:
             config: Configuration instance (uses global config if None)
+            queue_service: Queue service instance (creates new one if None)
+            tts_service: TTS service instance (creates new one if None)
         """
         self.config = config or get_config()
-        self.tts_service = TTSService(config=self.config)
-        self.queue_service = QueueService(use_redis=True, config=self.config)
+        self.tts_service = tts_service or TTSService(config=self.config)
+        self.queue_service = queue_service or QueueService(
+            use_redis=self.config.use_redis,
+            config=self.config
+        )
         self.running = False
         self.worker_id = None
         self.tasks_processed = 0
@@ -183,31 +193,45 @@ class WorkerService:
 
 
 class WorkerManager:
-    def __init__(self, config: Optional[AudioConfig] = None):
+    def __init__(
+        self,
+        config: Optional[AudioConfig] = None,
+        queue_service_factory: Optional[callable] = None
+    ):
         """
-        Initialize worker manager with configuration.
+        Initialize worker manager with configuration and dependency injection.
 
         Args:
             config: Configuration instance (uses global config if None)
+            queue_service_factory: Factory function to create queue service instances
         """
         self.config = config or get_config()
         self.num_workers = self.config.num_workers
         self.workers = []
         self.worker_tasks = []
         self.start_time = None
+        self.queue_service_factory = queue_service_factory or (
+            lambda: QueueService(use_redis=self.config.use_redis, config=self.config)
+        )
 
     async def start_workers(self):
         """Start multiple worker instances with improved monitoring."""
         self.start_time = time.time()
+        queue_backend = "Redis" if self.config.use_redis else "in-memory"
         logger.info(
             f"Starting {self.num_workers} workers with config: "
-            f"redis_url={self.config.redis_url}, "
+            f"queue_backend={queue_backend}, "
             f"task_timeout={self.config.task_timeout}s"
         )
 
         for i in range(self.num_workers):
             try:
-                worker = WorkerService(config=self.config)
+                # Create a shared queue service for this worker
+                queue_service = self.queue_service_factory()
+                worker = WorkerService(
+                    config=self.config,
+                    queue_service=queue_service
+                )
                 worker_id = f"worker-{i+1}"
 
                 # Start worker in background task

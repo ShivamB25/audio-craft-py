@@ -42,7 +42,13 @@ class TTSValidationError(TTSError):
 
 
 class TTSQuotaError(TTSError):
-    """Quota exceeded errors."""
+    """Quota exceeded errors that should not be retried."""
+
+    pass
+
+
+class TTSRateLimitError(TTSAPIError):
+    """Rate limit errors that should be retried with backoff."""
 
     pass
 
@@ -117,6 +123,14 @@ class TTSService:
             return AudioResponse(
                 success=False, message="API quota exceeded", error=str(e)
             )
+        except TTSRateLimitError as e:
+            duration = time.time() - start_time
+            log_error_with_context(
+                logger, e, {**context, "duration": duration, "error_type": "rate_limit"}
+            )
+            return AudioResponse(
+                success=False, message="Rate limit exceeded after retries", error=str(e)
+            )
         except Exception as e:
             duration = time.time() - start_time
             log_error_with_context(
@@ -130,8 +144,8 @@ class TTSService:
         self, request: AudioRequest
     ) -> AudioResponse:
         """Generate audio with retry logic for API errors."""
-        # Create retry decorator with config values
-        retry_decorator = retry(
+        # Create retry decorator for general API errors
+        general_retry_decorator = retry(
             stop=stop_after_attempt(self.config.retry_attempts),
             wait=wait_exponential(
                 multiplier=1,
@@ -140,6 +154,21 @@ class TTSService:
             ),
             retry=retry_if_exception_type(TTSAPIError),
         )
+
+        # Create retry decorator for rate limit errors with longer backoff
+        rate_limit_retry_decorator = retry(
+            stop=stop_after_attempt(self.config.rate_limit_retry_attempts),
+            wait=wait_exponential(
+                multiplier=2,  # More aggressive backoff for rate limits
+                min=self.config.rate_limit_retry_min_wait,
+                max=self.config.rate_limit_retry_max_wait,
+            ),
+            retry=retry_if_exception_type(TTSRateLimitError),
+        )
+
+        # Combine both retry decorators
+        @rate_limit_retry_decorator
+        @general_retry_decorator
 
         @retry_decorator
         async def _generate_with_retry():
@@ -151,12 +180,19 @@ class TTSService:
                 # Categorize errors for appropriate retry behavior
                 if "invalid_argument" in error_msg or "validation" in error_msg:
                     raise TTSValidationError(f"Invalid request parameters: {str(e)}") from e
-                elif "quota" in error_msg or "rate_limit" in error_msg:
+                elif "429" in str(e) or "rate_limit" in error_msg or "too many requests" in error_msg:
+                    # Rate limit errors should be retried with exponential backoff
+                    logger.warning(f"Rate limit hit, will retry: {str(e)}")
+                    raise TTSRateLimitError(f"Rate limit exceeded: {str(e)}") from e
+                elif "quota" in error_msg and ("exceeded" in error_msg or "exhausted" in error_msg):
+                    # Quota exhaustion should not be retried
                     raise TTSQuotaError(f"API quota exceeded: {str(e)}") from e
                 elif (
                     "unavailable" in error_msg
                     or "timeout" in error_msg
                     or "connection" in error_msg
+                    or "503" in str(e)
+                    or "502" in str(e)
                 ):
                     logger.warning(f"Retryable API error: {str(e)}")
                     raise TTSAPIError(f"API temporarily unavailable: {str(e)}") from e

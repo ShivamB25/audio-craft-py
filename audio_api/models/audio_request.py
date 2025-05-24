@@ -165,8 +165,8 @@ class MultiSpeakerConfig(BaseModel):
 
     speakers: List[SpeakerConfig] = Field(
         ...,
-        min_items=2,
-        max_items=2,
+        min_length=2,
+        max_length=2,
         description="List of speaker configurations (exactly 2 speakers)",
     )
 
@@ -216,7 +216,7 @@ class AudioRequest(BaseModel):
 
 class BatchAudioRequest(BaseModel):
     requests: List[AudioRequest] = Field(
-        ..., min_items=1, max_items=100, description="List of audio requests"
+        ..., min_length=1, max_length=100, description="List of audio requests"
     )
     batch_id: Optional[str] = Field(default=None, description="Custom batch ID")
 

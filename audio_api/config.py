@@ -78,8 +78,24 @@ class AudioConfig(BaseModel):
         default_factory=lambda: _safe_int(os.getenv("RETRY_MAX_WAIT", "10"), 10),
         description="Maximum wait time between retries (seconds)",
     )
+    rate_limit_retry_attempts: int = Field(
+        default_factory=lambda: _safe_int(os.getenv("RATE_LIMIT_RETRY_ATTEMPTS", "5"), 5),
+        description="Number of retry attempts specifically for rate limit errors",
+    )
+    rate_limit_retry_min_wait: int = Field(
+        default_factory=lambda: _safe_int(os.getenv("RATE_LIMIT_RETRY_MIN_WAIT", "10"), 10),
+        description="Minimum wait time between rate limit retries (seconds)",
+    )
+    rate_limit_retry_max_wait: int = Field(
+        default_factory=lambda: _safe_int(os.getenv("RATE_LIMIT_RETRY_MAX_WAIT", "60"), 60),
+        description="Maximum wait time between rate limit retries (seconds)",
+    )
 
     # Redis Configuration
+    use_redis: bool = Field(
+        default_factory=lambda: os.getenv("USE_REDIS", "false").lower() == "true",
+        description="Whether to use Redis for queue persistence",
+    )
     redis_url: str = Field(
         default_factory=lambda: os.getenv("REDIS_URL", "redis://localhost:6379/0"),
         description="Redis connection URL",
@@ -156,15 +172,29 @@ class AudioConfig(BaseModel):
         if self.retry_min_wait > self.retry_max_wait:
             raise ValueError("RETRY_MIN_WAIT must be less than or equal to RETRY_MAX_WAIT")
 
+        # Rate limit retry validation
+        if self.rate_limit_retry_attempts < 0:
+            raise ValueError("RATE_LIMIT_RETRY_ATTEMPTS must be non-negative")
+        
+        if self.rate_limit_retry_min_wait < 0:
+            raise ValueError("RATE_LIMIT_RETRY_MIN_WAIT must be non-negative")
+        
+        if self.rate_limit_retry_max_wait < 0:
+            raise ValueError("RATE_LIMIT_RETRY_MAX_WAIT must be non-negative")
+        
+        if self.rate_limit_retry_min_wait > self.rate_limit_retry_max_wait:
+            raise ValueError("RATE_LIMIT_RETRY_MIN_WAIT must be less than or equal to RATE_LIMIT_RETRY_MAX_WAIT")
+
         # Redis Configuration validation
-        if not self.redis_url:
-            raise ValueError("REDIS_URL is required")
-        
-        if not self.redis_url.startswith(("redis://", "rediss://")):
-            raise ValueError("REDIS_URL must start with 'redis://' or 'rediss://'")
-        
-        if self.redis_pool_size <= 0:
-            raise ValueError("REDIS_POOL_SIZE must be positive")
+        if self.use_redis:
+            if not self.redis_url:
+                raise ValueError("REDIS_URL is required when USE_REDIS is true")
+            
+            if not self.redis_url.startswith(("redis://", "rediss://")):
+                raise ValueError("REDIS_URL must start with 'redis://' or 'rediss://'")
+            
+            if self.redis_pool_size <= 0:
+                raise ValueError("REDIS_POOL_SIZE must be positive")
 
         # Worker Configuration validation
         if self.num_workers <= 0:
