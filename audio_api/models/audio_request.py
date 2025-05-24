@@ -202,13 +202,11 @@ class AudioRequest(BaseModel):
 
     def model_post_init(self, __context) -> None:
         """Validate speaker mode configuration."""
-        if (self.speaker_mode == SpeakerMode.MULTIPLE and
-                not self.multi_speaker_config):
+        if self.speaker_mode == SpeakerMode.MULTIPLE and not self.multi_speaker_config:
             raise ValueError(
                 "multi_speaker_config is required when speaker_mode=MULTIPLE"
             )
-        elif (self.speaker_mode == SpeakerMode.SINGLE and
-              self.multi_speaker_config):
+        elif self.speaker_mode == SpeakerMode.SINGLE and self.multi_speaker_config:
             raise ValueError(
                 "multi_speaker_config should not be provided when speaker_mode=SINGLE"
             )

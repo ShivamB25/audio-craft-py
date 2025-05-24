@@ -1,6 +1,5 @@
 import json
 import uuid
-import asyncio
 from typing import Optional, Dict, Any, TYPE_CHECKING
 from datetime import datetime
 import logging
@@ -197,7 +196,9 @@ class QueueService:
 
                 if self.use_redis:
                     # Redis backend
-                    await self._redis_client.lpush(self.task_queue, json.dumps(task_data))
+                    await self._redis_client.lpush(
+                        self.task_queue, json.dumps(task_data)
+                    )
                 else:
                     # In-memory backend
                     self._task_queue.appendleft(task_data)
@@ -355,7 +356,9 @@ class QueueService:
         try:
             if self.use_redis:
                 # Redis backend
-                result_data_str = await self._redis_client.get(f"{self.result_prefix}{task_id}")
+                result_data_str = await self._redis_client.get(
+                    f"{self.result_prefix}{task_id}"
+                )
                 if not result_data_str:
                     return None
                 result_data = json.loads(result_data_str)
@@ -383,7 +386,9 @@ class QueueService:
         try:
             if self.use_redis:
                 # Redis backend
-                batch_data_str = await self._redis_client.get(f"{self.batch_prefix}{batch_id}")
+                batch_data_str = await self._redis_client.get(
+                    f"{self.batch_prefix}{batch_id}"
+                )
                 if not batch_data_str:
                     return None
                 batch_data = json.loads(batch_data_str)
