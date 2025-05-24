@@ -148,15 +148,15 @@ USE_REDIS=false                    # Default: in-memory queuing
 
 # Redis (when USE_REDIS=true)
 REDIS_URL=redis://localhost:6379/0
-REDIS_POOL_SIZE=10
+REDIS_POOL_SIZE=10                 # Default: 10
 
-# Rate Limiting
-RATE_LIMIT_RETRY_ATTEMPTS=5
-RATE_LIMIT_RETRY_MIN_WAIT=10
-RATE_LIMIT_RETRY_MAX_WAIT=60
+# Rate Limiting (defaults shown)
+RATE_LIMIT_RETRY_ATTEMPTS=5        # Default: 5
+RATE_LIMIT_RETRY_MIN_WAIT=10       # Default: 10 seconds
+RATE_LIMIT_RETRY_MAX_WAIT=60       # Default: 60 seconds
 
 # TTS Model
-DEFAULT_TTS_MODEL=gemini-2.5-pro-preview-tts
+DEFAULT_TTS_MODEL=gemini-2.5-pro-preview-tts  # Default model
 ```
 
 ## Common Issues & Solutions
@@ -170,7 +170,7 @@ DEFAULT_TTS_MODEL=gemini-2.5-pro-preview-tts
 - **Solution**: Set GEMINI_API_KEY in .env file
 
 ### Rate Limiting
-- **Issue**: 429 rate limit errors
+- **Issue**: 429 rate-limit errors
 - **Solution**: Automatic retry with exponential backoff (configured via environment)
 
 ### Configuration Issues
@@ -197,7 +197,7 @@ DEFAULT_TTS_MODEL=gemini-2.5-pro-preview-tts
 - **redis**: >=6.1.0 (Connection pooling)
 
 ## File Structure
-```
+```text
 audio_api/
 ├── models/audio_request.py      # Core models and enums
 ├── services/tts_service.py      # TTS processing with retry logic
