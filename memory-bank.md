@@ -274,8 +274,103 @@ audio_api/
 - **Preserved**: All necessary imports for functionality remain intact
 - **Impact**: Improved code maintainability and reduced import overhead
 
+## Dependency Injection & Rate Limit Improvements (Phase 11)
+
+### 🚀 Dependency Injection Enhancement
+- **Problem**: Hard-coded Redis usage in WorkerService prevented flexibility for testing and local development
+- **Solution**: Comprehensive dependency injection pattern implementation
+- **Key Changes**:
+  - Added `USE_REDIS` configuration option (defaults to `false`)
+  - Enhanced `WorkerService` constructor with optional `queue_service` and `tts_service` parameters
+  - Enhanced `WorkerManager` with `queue_service_factory` parameter for flexible service creation
+  - Updated `.env.example` with clear Redis configuration documentation
+
+### 🔄 Rate Limit Handling Enhancement
+- **Problem**: Rate limit errors (429) were treated as non-retryable quota errors
+- **Solution**: Intelligent rate limit detection and retry with exponential backoff
+- **Key Changes**:
+  - Added `TTSRateLimitError` exception class for retryable rate limit errors
+  - Distinguished between rate limits (retryable) and quota exhaustion (non-retryable)
+  - Separate retry configuration for rate limits with longer backoff times
+  - Enhanced error categorization logic to detect 429 status codes
+
+### 📋 Configuration Enhancements
+- **New Rate Limit Settings**:
+  - `RATE_LIMIT_RETRY_ATTEMPTS=5` (default)
+  - `RATE_LIMIT_RETRY_MIN_WAIT=10` (seconds)
+  - `RATE_LIMIT_RETRY_MAX_WAIT=60` (seconds)
+- **Redis Control**:
+  - `USE_REDIS=false` (default for local development)
+  - Redis URL validation only when `USE_REDIS=true`
+
+### 🧪 Testing Improvements
+- **New Test File**: `tests/test_worker_service_dependency_injection.py`
+- **Test Coverage**:
+  - Dependency injection functionality
+  - Redis configuration flexibility
+  - Mock service injection for unit testing
+  - Configuration validation scenarios
+- **Pytest Configuration**: Fixed all async test warnings and Pydantic deprecation warnings
+
+### 🔧 Code Quality Fixes
+- **Linting**: All `ruff check` errors resolved
+- **Pydantic**: Updated `min_items`/`max_items` to `min_length`/`max_length`
+- **Pytest**: Added proper async configuration and fixture loop scope
+
+### 💡 Benefits Achieved
+- **Testing Flexibility**: Can now use in-memory queuing for unit tests
+- **Local Development**: No Redis dependency required by default
+- **Rate Limit Resilience**: Automatic retry with intelligent backoff for rate limits
+- **Configuration-Driven**: All behavior controlled via environment variables
+- **Clean Test Output**: Zero warnings in test execution
+
+### Usage Examples
+
+#### Local Development (No Redis)
+```python
+# .env file
+USE_REDIS=false
+GEMINI_API_KEY=your_key
+
+# Code automatically uses in-memory queuing
+worker = WorkerService()  # Uses config.use_redis = false
+```
+
+#### Production with Redis
+```python
+# .env file
+USE_REDIS=true
+REDIS_URL=redis://localhost:6379/0
+
+# Code automatically uses Redis with connection pooling
+worker = WorkerService()  # Uses config.use_redis = true
+```
+
+#### Testing with Mocks
+```python
+# Inject mock services for testing
+mock_queue = Mock(spec=QueueService)
+mock_tts = Mock(spec=TTSService)
+
+worker = WorkerService(
+    queue_service=mock_queue,
+    tts_service=mock_tts
+)
+```
+
+#### Rate Limit Configuration
+```python
+# .env file
+RATE_LIMIT_RETRY_ATTEMPTS=5
+RATE_LIMIT_RETRY_MIN_WAIT=10
+RATE_LIMIT_RETRY_MAX_WAIT=60
+
+# Automatic retry with exponential backoff for 429 errors
+result = await tts.generate_audio(request)  # Handles rate limits gracefully
+```
+
 ---
 
-**Last Updated**: Phase 10 - Code quality and linting improvements
-**Status**: Enterprise-ready, production-grade solution with clean codebase
-**Version**: 2.0.1 (Code Quality Enhanced)
+**Last Updated**: Phase 11 - Dependency injection and rate limit handling
+**Status**: Enterprise-ready with flexible deployment and robust rate limit handling
+**Version**: 2.1.0 (Dependency Injection & Rate Limit Enhanced)

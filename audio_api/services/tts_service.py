@@ -169,8 +169,6 @@ class TTSService:
         # Combine both retry decorators
         @rate_limit_retry_decorator
         @general_retry_decorator
-
-        @retry_decorator
         async def _generate_with_retry():
             try:
                 return await self._generate_gemini_audio(request)
@@ -179,12 +177,20 @@ class TTSService:
 
                 # Categorize errors for appropriate retry behavior
                 if "invalid_argument" in error_msg or "validation" in error_msg:
-                    raise TTSValidationError(f"Invalid request parameters: {str(e)}") from e
-                elif "429" in str(e) or "rate_limit" in error_msg or "too many requests" in error_msg:
+                    raise TTSValidationError(
+                        f"Invalid request parameters: {str(e)}"
+                    ) from e
+                elif (
+                    "429" in str(e)
+                    or "rate_limit" in error_msg
+                    or "too many requests" in error_msg
+                ):
                     # Rate limit errors should be retried with exponential backoff
                     logger.warning(f"Rate limit hit, will retry: {str(e)}")
                     raise TTSRateLimitError(f"Rate limit exceeded: {str(e)}") from e
-                elif "quota" in error_msg and ("exceeded" in error_msg or "exhausted" in error_msg):
+                elif "quota" in error_msg and (
+                    "exceeded" in error_msg or "exhausted" in error_msg
+                ):
                     # Quota exhaustion should not be retried
                     raise TTSQuotaError(f"API quota exceeded: {str(e)}") from e
                 elif (

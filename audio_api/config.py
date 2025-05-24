@@ -14,11 +14,11 @@ load_dotenv()
 def _safe_int(value: str, default: int) -> int:
     """
     Safely convert a string to int, returning default on failure.
-    
+
     Args:
         value: String value to convert
         default: Default value to return if conversion fails
-        
+
     Returns:
         Converted integer or default value
     """
@@ -49,7 +49,9 @@ class AudioConfig(BaseModel):
         description="Directory for output audio files",
     )
     default_sample_rate: int = Field(
-        default_factory=lambda: _safe_int(os.getenv("DEFAULT_SAMPLE_RATE", "24000"), 24000),
+        default_factory=lambda: _safe_int(
+            os.getenv("DEFAULT_SAMPLE_RATE", "24000"), 24000
+        ),
         description="Default audio sample rate in Hz",
     )
     default_bit_depth: int = Field(
@@ -63,7 +65,9 @@ class AudioConfig(BaseModel):
 
     # Performance Configuration
     max_context_tokens: int = Field(
-        default_factory=lambda: _safe_int(os.getenv("MAX_CONTEXT_TOKENS", "32000"), 32000),
+        default_factory=lambda: _safe_int(
+            os.getenv("MAX_CONTEXT_TOKENS", "32000"), 32000
+        ),
         description="Maximum context tokens for Gemini TTS",
     )
     retry_attempts: int = Field(
@@ -79,15 +83,21 @@ class AudioConfig(BaseModel):
         description="Maximum wait time between retries (seconds)",
     )
     rate_limit_retry_attempts: int = Field(
-        default_factory=lambda: _safe_int(os.getenv("RATE_LIMIT_RETRY_ATTEMPTS", "5"), 5),
+        default_factory=lambda: _safe_int(
+            os.getenv("RATE_LIMIT_RETRY_ATTEMPTS", "5"), 5
+        ),
         description="Number of retry attempts specifically for rate limit errors",
     )
     rate_limit_retry_min_wait: int = Field(
-        default_factory=lambda: _safe_int(os.getenv("RATE_LIMIT_RETRY_MIN_WAIT", "10"), 10),
+        default_factory=lambda: _safe_int(
+            os.getenv("RATE_LIMIT_RETRY_MIN_WAIT", "10"), 10
+        ),
         description="Minimum wait time between rate limit retries (seconds)",
     )
     rate_limit_retry_max_wait: int = Field(
-        default_factory=lambda: _safe_int(os.getenv("RATE_LIMIT_RETRY_MAX_WAIT", "60"), 60),
+        default_factory=lambda: _safe_int(
+            os.getenv("RATE_LIMIT_RETRY_MAX_WAIT", "60"), 60
+        ),
         description="Maximum wait time between rate limit retries (seconds)",
     )
 
@@ -136,7 +146,7 @@ class AudioConfig(BaseModel):
         description="Maximum text length for TTS",
     )
 
-    @field_validator('gemini_api_key')
+    @field_validator("gemini_api_key")
     @classmethod
     def validate_gemini_api_key(cls, v: str) -> str:
         """Validate that the Gemini API key is not empty."""
@@ -149,10 +159,10 @@ class AudioConfig(BaseModel):
         # Audio Configuration validation
         if self.default_sample_rate <= 0:
             raise ValueError("DEFAULT_SAMPLE_RATE must be positive")
-        
+
         if self.default_bit_depth not in [8, 16, 24, 32]:
             raise ValueError("DEFAULT_BIT_DEPTH must be 8, 16, 24, or 32")
-        
+
         if self.default_channels <= 0 or self.default_channels > 8:
             raise ValueError("DEFAULT_CHANNELS must be between 1 and 8")
 
@@ -162,44 +172,48 @@ class AudioConfig(BaseModel):
 
         if self.retry_attempts < 0:
             raise ValueError("RETRY_ATTEMPTS must be non-negative")
-        
+
         if self.retry_min_wait < 0:
             raise ValueError("RETRY_MIN_WAIT must be non-negative")
-        
+
         if self.retry_max_wait < 0:
             raise ValueError("RETRY_MAX_WAIT must be non-negative")
-        
+
         if self.retry_min_wait > self.retry_max_wait:
-            raise ValueError("RETRY_MIN_WAIT must be less than or equal to RETRY_MAX_WAIT")
+            raise ValueError(
+                "RETRY_MIN_WAIT must be less than or equal to RETRY_MAX_WAIT"
+            )
 
         # Rate limit retry validation
         if self.rate_limit_retry_attempts < 0:
             raise ValueError("RATE_LIMIT_RETRY_ATTEMPTS must be non-negative")
-        
+
         if self.rate_limit_retry_min_wait < 0:
             raise ValueError("RATE_LIMIT_RETRY_MIN_WAIT must be non-negative")
-        
+
         if self.rate_limit_retry_max_wait < 0:
             raise ValueError("RATE_LIMIT_RETRY_MAX_WAIT must be non-negative")
-        
+
         if self.rate_limit_retry_min_wait > self.rate_limit_retry_max_wait:
-            raise ValueError("RATE_LIMIT_RETRY_MIN_WAIT must be less than or equal to RATE_LIMIT_RETRY_MAX_WAIT")
+            raise ValueError(
+                "RATE_LIMIT_RETRY_MIN_WAIT must be less than or equal to RATE_LIMIT_RETRY_MAX_WAIT"
+            )
 
         # Redis Configuration validation
         if self.use_redis:
             if not self.redis_url:
                 raise ValueError("REDIS_URL is required when USE_REDIS is true")
-            
+
             if not self.redis_url.startswith(("redis://", "rediss://")):
                 raise ValueError("REDIS_URL must start with 'redis://' or 'rediss://'")
-            
+
             if self.redis_pool_size <= 0:
                 raise ValueError("REDIS_POOL_SIZE must be positive")
 
         # Worker Configuration validation
         if self.num_workers <= 0:
             raise ValueError("NUM_WORKERS must be positive")
-        
+
         if self.task_timeout <= 0:
             raise ValueError("TASK_TIMEOUT must be positive")
 
@@ -211,12 +225,14 @@ class AudioConfig(BaseModel):
         # Validation Configuration validation
         if self.min_audio_size <= 0:
             raise ValueError("MIN_AUDIO_SIZE must be positive")
-        
+
         if self.max_text_length <= 0:
             raise ValueError("MAX_TEXT_LENGTH must be positive")
-        
+
         if self.max_text_length > 100000:
-            raise ValueError("MAX_TEXT_LENGTH should not exceed 100,000 characters for performance reasons")
+            raise ValueError(
+                "MAX_TEXT_LENGTH should not exceed 100,000 characters for performance reasons"
+            )
 
     @classmethod
     def load_config(cls) -> "AudioConfig":

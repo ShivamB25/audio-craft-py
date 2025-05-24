@@ -21,7 +21,7 @@ class WorkerService:
         self,
         config: Optional[AudioConfig] = None,
         queue_service: Optional[QueueService] = None,
-        tts_service: Optional[TTSService] = None
+        tts_service: Optional[TTSService] = None,
     ):
         """
         Initialize worker service with dependency injection.
@@ -34,8 +34,7 @@ class WorkerService:
         self.config = config or get_config()
         self.tts_service = tts_service or TTSService(config=self.config)
         self.queue_service = queue_service or QueueService(
-            use_redis=self.config.use_redis,
-            config=self.config
+            use_redis=self.config.use_redis, config=self.config
         )
         self.running = False
         self.worker_id = None
@@ -196,7 +195,7 @@ class WorkerManager:
     def __init__(
         self,
         config: Optional[AudioConfig] = None,
-        queue_service_factory: Optional[callable] = None
+        queue_service_factory: Optional[callable] = None,
     ):
         """
         Initialize worker manager with configuration and dependency injection.
@@ -228,10 +227,7 @@ class WorkerManager:
             try:
                 # Create a shared queue service for this worker
                 queue_service = self.queue_service_factory()
-                worker = WorkerService(
-                    config=self.config,
-                    queue_service=queue_service
-                )
+                worker = WorkerService(config=self.config, queue_service=queue_service)
                 worker_id = f"worker-{i+1}"
 
                 # Start worker in background task
@@ -244,7 +240,9 @@ class WorkerManager:
 
             except Exception as e:
                 logger.error(f"Failed to start worker {i+1}: {str(e)}")
-                raise WorkerServiceError(f"Failed to start worker {i+1}: {str(e)}") from e
+                raise WorkerServiceError(
+                    f"Failed to start worker {i+1}: {str(e)}"
+                ) from e
 
         logger.info(f"All {self.num_workers} workers started successfully")
 

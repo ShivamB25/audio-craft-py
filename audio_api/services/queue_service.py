@@ -9,6 +9,7 @@ from collections import deque
 try:
     import redis
     import redis.asyncio as aioredis
+
     REDIS_AVAILABLE = True
 except ImportError:
     REDIS_AVAILABLE = False
