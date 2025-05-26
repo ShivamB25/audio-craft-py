@@ -2,7 +2,7 @@
 
 **Professional text-to-speech library for Python** - Generate high-quality audio with Google Gemini TTS
 
-[![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
@@ -23,8 +23,11 @@
 ### Installation
 
 ```bash
-# Install dependencies
+# Install dependencies (recommended - faster)
 uv sync
+
+# Alternative: using pip
+pip install -e .
 
 # Set up API key
 cp .env.example .env
@@ -188,7 +191,7 @@ python main.py
 
 ## 📋 Requirements
 
-- **Python 3.12+**
+- **Python 3.9+**
 - **Google Gemini API key** ([Get one here](https://ai.google.dev/))
 - **Redis** (optional, for production queuing)
 
